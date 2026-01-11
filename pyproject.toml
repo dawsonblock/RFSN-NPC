@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rfsn_hybrid_engine"
+version = "0.4.1"
+description = "RFSN state machine + local GGUF LLM for governed NPC dialogue"
+requires-python = ">=3.9"
+dependencies = [
+  "llama-cpp-python>=0.2.90",
+]
+
+[project.optional-dependencies]
+semantic = [
+  "faiss-cpu>=1.7.0",
+  "sentence-transformers>=2.2.0",
+]
+api = [
+  "fastapi>=0.100.0",
+  "uvicorn>=0.20.0",
+]
+dev = [
+  "pytest>=8.0.0",
+]
+all = [
+  "rfsn_hybrid_engine[semantic,api,dev]",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
