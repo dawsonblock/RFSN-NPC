@@ -154,7 +154,9 @@ class RFSNHybridEngine:
         # User requested "minimal retrieval: most recent N facts".
         # Let's implement _select_recent_facts helper.
         
-        facts_used = self._select_recent_facts(store, limit=5)
+        
+        # Retrieve relevant facts (Keyword + Recency)
+        facts_used = self._select_relevant_facts(store, text, limit=5)
 
         response_text = ""
         if self.llm:
@@ -176,19 +178,67 @@ class RFSNHybridEngine:
             "facts_used": facts_used
         }
 
-    def _select_recent_facts(self, store: StateStore, limit: int = 5) -> List[str]:
-        """Select most recent N facts from the store."""
-        # Accessing private _facts if needed, or public property if available.
-        # We added 'facts' property to StateStore in previous turn.
-        # It likely returns List[Fact] or List[dict]. Check StateStore.
-        # Assuming it matches storage.Fact
+    def _select_relevant_facts(self, store: StateStore, user_text: str, limit: int = 5) -> List[str]:
+        """Select facts relevant to user text, falling back to recency."""
         if not hasattr(store, "facts"):
             return []
         
-        all_facts = store.facts # List[Fact]
-        # Sort by time? They are appended, so just take last N.
-        recent = all_facts[-limit:]
-        return [f.text for f in recent]
+        if not store.facts:
+            return []
+            
+        all_facts = [f.text for f in store.facts]
+        
+        # 1. Score by keyword overlap
+        user_words = set(w.lower() for w in user_text.split() if len(w) > 3)
+        scored = []
+        for f in all_facts:
+            score = sum(1 for w in f.lower().split() if w in user_words)
+            scored.append((score, f))
+            
+        # 2. Prioritize high scores
+        scored.sort(key=lambda x: x[0], reverse=True)
+        relevant = [f for s, f in scored if s > 0]
+        
+        # 3. Fallback to recent
+        recents = all_facts[-limit:]
+        
+        # 4. Combine (Relevant -> Recent), Unique only
+        selection = []
+        seen = set()
+        
+        for f in relevant:
+            if f not in seen:
+                selection.append(f)
+                seen.add(f)
+            if len(selection) >= limit:
+                break
+                
+        if len(selection) < limit:
+            for f in reversed(recents): # Newest first
+                if f not in seen:
+                    selection.append(f)
+                    seen.add(f)
+                if len(selection) >= limit:
+                    break
+                    
+        return selection[:limit]
+
+    def build_system_text(self, state: RFSNState, facts: List[str]) -> str:
+        """Build rich system prompt with persona, mood, and facts."""
+        base = (
+            f"You are {state.npc_name}, a {state.role} in the world of Skyrim.\n"
+            f"Current Mood: {state.mood} (Affinity: {state.affinity:.2f})\n"
+            "Interacting with: Player.\n"
+            "Guidelines:\n"
+            "- Stay in character.\n"
+            "- Be concise and natural.\n"
+            "- React to the player's actions and words.\n"
+        )
+        
+        if facts:
+            base += "\nRelevant Memories:\n" + "\n".join(f"- {f}" for f in facts)
+            
+        return base
 
     def _generate_llm(self, state: RFSNState, user_text: str, facts_used: List[str]) -> str:
         """Generate response using real LLM."""
