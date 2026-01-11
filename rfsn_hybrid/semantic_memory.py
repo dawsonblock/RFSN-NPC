@@ -13,7 +13,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -46,23 +46,16 @@ class SemanticFact:
 
 class SemanticFactStore:
     """
-    Embedding-based fact storage with FAISS similarity search.
+    Optimized embedding-based fact storage with FAISS similarity search.
     
-    This provides semantic retrieval of facts based on query similarity,
-    rather than simple tag matching. Falls back gracefully if dependencies
-    aren't installed.
-    
-    Attributes:
-        model_name: The sentence-transformers model to use for embeddings
-        path: Path to persist the fact store
-    
-    Example:
-        >>> store = SemanticFactStore("./facts.json")
-        >>> store.add_fact("Player gave Lydia a sword", ["gift"], 0.9)
-        >>> results = store.search("Has anyone given me a weapon?", k=3)
+    Performance optimizations:
+    - LRU cache for query embeddings
+    - Batch embedding support
+    - Lazy model loading
     """
     
     DEFAULT_MODEL = "all-MiniLM-L6-v2"  # Fast, good quality, 384-dim
+    EMBEDDING_CACHE_SIZE = 128  # Cache recent query embeddings
     
     def __init__(
         self,
@@ -70,14 +63,6 @@ class SemanticFactStore:
         model_name: str = DEFAULT_MODEL,
         lazy_load: bool = True,
     ):
-        """
-        Initialize the semantic fact store.
-        
-        Args:
-            path: Path to persist facts (JSON format)
-            model_name: Sentence-transformers model name
-            lazy_load: If True, delay loading the model until first use
-        """
         if not _SEMANTIC_AVAILABLE:
             raise ImportError(
                 "Semantic memory requires additional dependencies.\n"
@@ -91,6 +76,10 @@ class SemanticFactStore:
         self._index: Optional[faiss.IndexFlatIP] = None
         self._embedding_dim: Optional[int] = None
         
+        # LRU cache for query embeddings: {query_hash: embedding}
+        self._embedding_cache: Dict[int, np.ndarray] = {}
+        self._cache_order: List[int] = []  # Track access order
+        
         if not lazy_load:
             self._ensure_model()
         
@@ -103,6 +92,31 @@ class SemanticFactStore:
             self._model = SentenceTransformer(self.model_name)
             self._embedding_dim = self._model.get_sentence_embedding_dimension()
         return self._model
+    
+    def _get_cached_embedding(self, query: str) -> np.ndarray:
+        """Get embedding from cache or compute it."""
+        query_hash = hash(query)
+        
+        if query_hash in self._embedding_cache:
+            # Move to end (most recently used)
+            self._cache_order.remove(query_hash)
+            self._cache_order.append(query_hash)
+            return self._embedding_cache[query_hash]
+        
+        # Compute embedding
+        model = self._ensure_model()
+        embedding = model.encode(query, normalize_embeddings=True)
+        
+        # Cache it
+        self._embedding_cache[query_hash] = embedding
+        self._cache_order.append(query_hash)
+        
+        # Evict oldest if over capacity
+        while len(self._cache_order) > self.EMBEDDING_CACHE_SIZE:
+            oldest = self._cache_order.pop(0)
+            self._embedding_cache.pop(oldest, None)
+        
+        return embedding
     
     def _rebuild_index(self) -> None:
         """Rebuild the FAISS index from current facts."""
@@ -222,10 +236,8 @@ class SemanticFactStore:
         if not self.facts or self._index is None:
             return []
         
-        model = self._ensure_model()
-        
-        # Encode query
-        query_emb = model.encode(query, normalize_embeddings=True)
+        # Use cached embedding
+        query_emb = self._get_cached_embedding(query)
         query_emb = np.array([query_emb], dtype=np.float32)
         
         # Search
@@ -280,10 +292,8 @@ class SemanticFactStore:
         if self._index is None:
             return []
         
-        model = self._ensure_model()
-        
-        # Get semantic scores
-        query_emb = model.encode(query, normalize_embeddings=True)
+        # Use cached embedding
+        query_emb = self._get_cached_embedding(query)
         query_emb = np.array([query_emb], dtype=np.float32)
         
         # Search all facts

@@ -1,9 +1,9 @@
 {
   "version": "0.4.1",
   "abi": 1,
-  "build_time": "2026-01-10T22:56:27.558778",
+  "build_time": "2026-01-10T23:13:23.497223",
   "python_version": "3.9.7",
-  "file_count": 48,
+  "file_count": 49,
   "files": {
     "rfsn_hybrid/__init__.py": {
       "sha256": "33ed2699b938603456c438b95c2c58c32d0a176791cffd8706113058009e897c",
@@ -38,12 +38,12 @@
       "size": 6031
     },
     "rfsn_hybrid/core/state/reducer.py": {
-      "sha256": "29a13706f44353d6e6cdc8cd4e2324eda972222409f18ed3dbe16699ab00f7c8",
-      "size": 5678
+      "sha256": "51270ecb16785d673bcc8d53e8da20fc3ea3da7d0be3f4e94ceae356e8ea363c",
+      "size": 7349
     },
     "rfsn_hybrid/core/state/store.py": {
-      "sha256": "f57bb614d3d3606a8310256d3a67bcde54254e059167616b5beffc2c1b71d5d3",
-      "size": 9532
+      "sha256": "9e0f967b462ee5b35721d2dcb54e3901f27f08ff075da2835baf8a1278dd02e6",
+      "size": 7895
     },
     "rfsn_hybrid/dev_watch.py": {
       "sha256": "02029b7b0858e1ca296233c1aea0313190e169ec05d1de7de76119ba4e84fe11",
@@ -90,8 +90,8 @@
       "size": 11788
     },
     "rfsn_hybrid/semantic_memory.py": {
-      "sha256": "ca0a211d041194be6b4744cdf903cd6a9eb4c422061fa5b8601df1082c7b2c35",
-      "size": 10973
+      "sha256": "40e489d0342a377db9b3205b3f1d9d93b003fa014f5f3b655f76c0d8183337f1",
+      "size": 11389
     },
     "rfsn_hybrid/state_machine.py": {
       "sha256": "9abc64f5b2c7db94b89b3c874a63c27c94e7799c0c45e7f5e0e5472511a540ab",
@@ -124,6 +124,10 @@
     "rfsn_hybrid/version.py": {
       "sha256": "b5011e995ef671a9a44bda0c667d3d5488348dd0323293114ba1eaf3189f6a76",
       "size": 6019
+    },
+    "build_manifest.json": {
+      "sha256": "3e1c27abb00c7a337b69f6bcf5826487b090898279a88e314319d8b331593d1e",
+      "size": 7108
     },
     "pyproject.toml": {
       "sha256": "cfe62c181b520eee6d023ac012d67dd43d7e30afe81888e5b60b6e48b518e094",
