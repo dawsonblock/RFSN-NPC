@@ -1,9 +1,9 @@
 {
   "version": "0.5.2",
   "abi": 1,
-  "build_time": "2026-01-10T23:25:00.801537",
+  "build_time": "2026-01-10T23:44:47.719590",
   "python_version": "3.9.7",
-  "file_count": 56,
+  "file_count": 60,
   "files": {
     "rfsn_hybrid/__init__.py": {
       "sha256": "33ed2699b938603456c438b95c2c58c32d0a176791cffd8706113058009e897c",
@@ -65,6 +65,10 @@
       "sha256": "3276c58e57c626eb9146c5c3235766508ded066e9e13e41058e8735f6cca8ec9",
       "size": 7257
     },
+    "rfsn_hybrid/heartbeat.py": {
+      "sha256": "1ce37348ed3f29b81b8dc360ae13cc78a87026e2648bfbb5a5e2ca18cd32ff24",
+      "size": 8655
+    },
     "rfsn_hybrid/intent_classifier.py": {
       "sha256": "1b7230d87963f3da7ff6f0122dd13289d0c0a0d20679dbd22099db82675d05c3",
       "size": 6610
@@ -84,6 +88,10 @@
     "rfsn_hybrid/metrics.py": {
       "sha256": "de011a85c056532fe381eb94505f260528bea289f1af3393db7b21eee90656fc",
       "size": 8376
+    },
+    "rfsn_hybrid/persistence.py": {
+      "sha256": "aaf128dfb1b17f48b73ab394b4b241e2e667b8184241af10731f17bb44628c94",
+      "size": 9239
     },
     "rfsn_hybrid/prompting.py": {
       "sha256": "4da4ee0f55c9e9619e5bd2c66039d7d3f5ddaf7c340525766ef16a249553f934",
@@ -121,6 +129,10 @@
       "sha256": "d964ad7c5b9b6a73299f752d26b247fe8e405c817e8e1f70ffc34b3b3fedddc4",
       "size": 10364
     },
+    "rfsn_hybrid/supervisor.py": {
+      "sha256": "57db6edd82e23e451b633fae3932f24f09ae47413fb9e3fc6a9e4dee5b83842f",
+      "size": 9541
+    },
     "rfsn_hybrid/types.py": {
       "sha256": "f2395789b5e1cddf7a1d91326c9eb8eed6cfda637c4d5c00ef4a05ac91a73605",
       "size": 2840
@@ -138,8 +150,8 @@
       "size": 6019
     },
     "build_manifest.json": {
-      "sha256": "4b0e6856b6085306683d6691ff2443388f7221568a5918571e316ab2ebe2c821",
-      "size": 7817
+      "sha256": "959d41d3f0e45e67e46ed82b3c14bb4836ee797650f5a12a84d493e2af5c80ae",
+      "size": 8243
     },
     "docker-compose.yml": {
       "sha256": "23368bfa5e884117a1f3530f032eaa55815c9a4500e6bbd0fa273d31982afd76",
@@ -188,6 +200,10 @@
     "tests/test_memory.py": {
       "sha256": "4abc5d217c9fe78de6bb327a101a6976053761d93a59d5fd6d8f9be23664ec26",
       "size": 8828
+    },
+    "tests/test_operational.py": {
+      "sha256": "deae01a6eb16cf5f9def35bf72f58cf0a5d80b330e8a248e6a8b45869a7620a7",
+      "size": 7072
     },
     "tests/test_prompting.py": {
       "sha256": "7c6319df5cc968a1df9e37fafc1cb23c0038e8151764b05fb4abebb182856595",
