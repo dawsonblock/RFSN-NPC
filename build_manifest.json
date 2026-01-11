@@ -1,9 +1,9 @@
 {
   "version": "0.5.2",
   "abi": 1,
-  "build_time": "2026-01-10T23:44:47.719590",
+  "build_time": "2026-01-10T23:59:09.073750",
   "python_version": "3.9.7",
-  "file_count": 60,
+  "file_count": 64,
   "files": {
     "rfsn_hybrid/__init__.py": {
       "sha256": "33ed2699b938603456c438b95c2c58c32d0a176791cffd8706113058009e897c",
@@ -61,6 +61,10 @@
       "sha256": "0f7824627eae6ce1189f09bce889d3f6e949671c16564b2da56e765c5a92bc09",
       "size": 10072
     },
+    "rfsn_hybrid/harness.py": {
+      "sha256": "1b1bcf9c508babd2aaf0791328bcadcd8ff0a5d9c6a41bce3bb8298088e44377",
+      "size": 3892
+    },
     "rfsn_hybrid/health.py": {
       "sha256": "3276c58e57c626eb9146c5c3235766508ded066e9e13e41058e8735f6cca8ec9",
       "size": 7257
@@ -104,6 +108,10 @@
     "rfsn_hybrid/relationships.py": {
       "sha256": "39c9f1d8e2d01746f6be838129aca992e891bdee88aea5e76220d56eb0d312f9",
       "size": 11788
+    },
+    "rfsn_hybrid/replay.py": {
+      "sha256": "9c30f4f8b1a07bc75c7e10ce7094ae6ff8a4593d13bb34bf30c7aca3e3fefb02",
+      "size": 5980
     },
     "rfsn_hybrid/semantic_memory.py": {
       "sha256": "40e489d0342a377db9b3205b3f1d9d93b003fa014f5f3b655f76c0d8183337f1",
@@ -150,8 +158,8 @@
       "size": 6019
     },
     "build_manifest.json": {
-      "sha256": "959d41d3f0e45e67e46ed82b3c14bb4836ee797650f5a12a84d493e2af5c80ae",
-      "size": 8243
+      "sha256": "521b88d10437374facb5fba74aa6ef74902b6f4d5fbfcb75c84817cea82d8526",
+      "size": 8823
     },
     "docker-compose.yml": {
       "sha256": "23368bfa5e884117a1f3530f032eaa55815c9a4500e6bbd0fa273d31982afd76",
@@ -180,6 +188,10 @@
     "tests/test_export.py": {
       "sha256": "a89bfcfdde24ea623511ab256c3cf8cc4dfc8252306c635b836bf3ee7ead847c",
       "size": 7130
+    },
+    "tests/test_harness.py": {
+      "sha256": "ba0ad73fd57aa59163124e66a8a0871fc36abad7e56e39985a1baa9ba24139a8",
+      "size": 591
     },
     "tests/test_health.py": {
       "sha256": "1a02f8fba4e9c65f6562b0f3003b01f10ac21b69cdec090f45316d8e603df3f9",
@@ -216,6 +228,10 @@
     "tests/test_relationships.py": {
       "sha256": "609becd6b70f0d036d6542cd5eea3a2e2e00221b0697eecabb70ee55beb04f91",
       "size": 7320
+    },
+    "tests/test_replay.py": {
+      "sha256": "aad6c872c5f1bceeb1a53a7331f5d11262036550781672c3b6cc68e2803b90e2",
+      "size": 2507
     },
     "tests/test_replay_determinism.py": {
       "sha256": "04e5979682a843e4af95be92950504a033ad4fc269c42bf994580b4e6d903498",
