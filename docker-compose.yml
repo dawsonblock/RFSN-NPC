@@ -13,10 +13,10 @@ services:
       - RFSN_DATA_DIR=/app/data
       - RFSN_LOG_LEVEL=INFO
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: [ "CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
   # Optional: Run with a specific model

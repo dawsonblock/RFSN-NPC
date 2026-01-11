@@ -70,7 +70,20 @@ class StateStore:
         self._snapshot_cache: Optional[RFSNState] = None
         self._snapshot_dirty = True
         self._facts_cache: Optional[List[Fact]] = None
+        self._facts_cache: Optional[List[Fact]] = None
         self._facts_dirty = True
+        
+    @property
+    def state(self) -> RFSNState:
+        """Current state snapshot."""
+        with self._lock:
+            return self._state
+
+    @property
+    def facts(self) -> List[Fact]:
+        """Current facts."""
+        with self._lock:
+            return list(self._facts)
     
     def dispatch(self, event: StateEvent) -> bool:
         """Dispatch an event to modify state."""

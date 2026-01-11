@@ -8,6 +8,12 @@ Prevents runaway latency and memory growth by:
 """
 from __future__ import annotations
 
+import time
+import threading
+from typing import Optional, Generic, TypeVar, List, Deque
+from enum import Enum
+from collections import deque
+
 import logging
 import threading
 from collections import deque
@@ -126,8 +132,15 @@ class BoundedQueue(Generic[T]):
                     
                 elif self.drop_policy == DropPolicy.BLOCK:
                     # Wait for space
-                    if not self._not_full.wait(timeout):
-                        return False
+                    deadline = None if timeout is None else (time.monotonic() + timeout)
+                    while len(self._queue) >= self.maxsize:
+                        if deadline is None:
+                            self._not_full.wait()
+                        else:
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                return False
+                            self._not_full.wait(timeout=remaining)
             
             self._queue.append(item)
             self._not_empty.notify()

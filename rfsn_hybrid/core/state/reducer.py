@@ -78,6 +78,14 @@ def _handle_fact_add(
     text = payload.get("text", "")
     tags = payload.get("tags", [])
     salience = payload.get("salience", 0.5)
+
+    # Admission Policy
+    if len(text) > 2000:
+        logger.warning("Fact rejected: Too long")
+        return state, facts, None
+    if any(b in text.lower() for b in ["<|", "|>", "system instruction"]):
+        logger.warning("Fact rejected: Contains forbidden tokens")
+        return state, facts, None
     
     # Only copy the list, not all facts
     new_facts = list(facts)
