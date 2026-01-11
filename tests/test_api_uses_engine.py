@@ -34,7 +34,7 @@ def test_chat_route_calls_engine(monkeypatch):
     # 3. Assertions
     assert response.status_code == 200, f"API failed: {response.text}"
     data = response.json()
-    assert data["response"] == "Mock Engine Response"
+    assert data["text"] == "Mock Engine Response"
     
     # Verify the mock was called exactly once with expected args
     mock_handle.assert_called_once()

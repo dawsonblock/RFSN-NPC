@@ -143,15 +143,22 @@ class RFSNHybridEngine:
         }))
 
         # 4. Generate Response (Mock or LLM)
+        # 4. Generate Response (Mock or LLM)
         snapshot = store.state
         
+        # Retrieve recent facts for context
+        # Adapting to use internal store directly or via the helper
+        facts_store = store.facts if hasattr(store, "facts") else [] # Handle if store doesn't expose it directly yet, but we added a property
+        # Actually store.facts property returns list[Fact], we probably want text
+        # But we can use _retrieve_facts if we want query-based, or just recent.
+        # User requested "minimal retrieval: most recent N facts".
+        # Let's implement _select_recent_facts helper.
+        
+        facts_used = self._select_recent_facts(store, limit=5)
+
         response_text = ""
         if self.llm:
-            # TODO: Integrate full context building from storage
-            # For this refactor, we keep it simple to prove the flow.
-            # Real generation would query facts etc.
-            # Using a simplified generate equivalent.
-             response_text = self._mock_generate(snapshot, text) # Placeholder for full LLM call
+             response_text = self._generate_llm(snapshot, text, facts_used)
         else:
              response_text = self._mock_generate(snapshot, text)
 
@@ -166,8 +173,43 @@ class RFSNHybridEngine:
         return {
             "text": response_text,
             "state": final_snap.to_dict(),
-            "facts_used": []
+            "facts_used": facts_used
         }
+
+    def _select_recent_facts(self, store: StateStore, limit: int = 5) -> List[str]:
+        """Select most recent N facts from the store."""
+        # Accessing private _facts if needed, or public property if available.
+        # We added 'facts' property to StateStore in previous turn.
+        # It likely returns List[Fact] or List[dict]. Check StateStore.
+        # Assuming it matches storage.Fact
+        if not hasattr(store, "facts"):
+            return []
+        
+        all_facts = store.facts # List[Fact]
+        # Sort by time? They are appended, so just take last N.
+        recent = all_facts[-limit:]
+        return [f.text for f in recent]
+
+    def _generate_llm(self, state: RFSNState, user_text: str, facts_used: List[str]) -> str:
+        """Generate response using real LLM."""
+        sys_prompt = self.build_system_text(state, facts_used)
+        
+        # Simple context assembly
+        context = f"{sys_prompt}\n\n"
+        context += f"Player: {user_text}\n{state.npc_name}:"
+        
+        try:
+            out = self.llm(
+                context,
+                max_tokens=160,
+                temperature=0.7,
+                stop=["\nPlayer:", f"\n{state.npc_name}:", "</s>"],
+                echo=False
+            )
+            return out["choices"][0]["text"].strip()
+        except Exception as e:
+            logger.error(f"LLM generation failed: {e}")
+            return f"*{state.npc_name} struggles to find words.*"
 
     def stream_text(self, npc_id: str, text: str):
         """Yield tokens or sentences for streaming."""
