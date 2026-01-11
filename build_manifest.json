@@ -1,0 +1,201 @@
+{
+  "version": "0.4.1",
+  "abi": 1,
+  "build_time": "2026-01-10T22:56:27.558778",
+  "python_version": "3.9.7",
+  "file_count": 48,
+  "files": {
+    "rfsn_hybrid/__init__.py": {
+      "sha256": "33ed2699b938603456c438b95c2c58c32d0a176791cffd8706113058009e897c",
+      "size": 37
+    },
+    "rfsn_hybrid/api.py": {
+      "sha256": "8673152c8dccfdc88b1bcc5ff76101acf6ab32be9b3f2ba5effa32a385911fcc",
+      "size": 14470
+    },
+    "rfsn_hybrid/cli.py": {
+      "sha256": "3ca417626b0ab8b18378266b40173ade645aa92d3b5fb947a6197d2d5d838926",
+      "size": 9943
+    },
+    "rfsn_hybrid/config.py": {
+      "sha256": "310dff53185c35021e2863e1a7fbae7304e02967787e0592e05ae4c8c36c785e",
+      "size": 8346
+    },
+    "rfsn_hybrid/core/__init__.py": {
+      "sha256": "8168d3811f1f0648adb15e372ef45118f4453342188faf0508493017fe235583",
+      "size": 24
+    },
+    "rfsn_hybrid/core/queues.py": {
+      "sha256": "3a1d4cd4d1ceaebaadb71237254851c4af0262aa7f237de136751bf421d157ec",
+      "size": 8810
+    },
+    "rfsn_hybrid/core/state/__init__.py": {
+      "sha256": "e0c930549fba6b399393dc3d9bf01e91a78592c9e05439baa5d3c1c0b55f4629",
+      "size": 219
+    },
+    "rfsn_hybrid/core/state/event_types.py": {
+      "sha256": "528000686e8e490de8bad5bc2c3b9e6eac17569cd074550b9dff9f9af6a2d604",
+      "size": 6031
+    },
+    "rfsn_hybrid/core/state/reducer.py": {
+      "sha256": "29a13706f44353d6e6cdc8cd4e2324eda972222409f18ed3dbe16699ab00f7c8",
+      "size": 5678
+    },
+    "rfsn_hybrid/core/state/store.py": {
+      "sha256": "f57bb614d3d3606a8310256d3a67bcde54254e059167616b5beffc2c1b71d5d3",
+      "size": 9532
+    },
+    "rfsn_hybrid/dev_watch.py": {
+      "sha256": "02029b7b0858e1ca296233c1aea0313190e169ec05d1de7de76119ba4e84fe11",
+      "size": 2245
+    },
+    "rfsn_hybrid/engine.py": {
+      "sha256": "caad20263d6b01d9d8184f0b300ce2281d170d20f31464ba8289611fc74868b9",
+      "size": 7145
+    },
+    "rfsn_hybrid/export.py": {
+      "sha256": "8a59e771898b6e2d80314c50533343c63a696c2ff5209852604231b6c2971d47",
+      "size": 7305
+    },
+    "rfsn_hybrid/file_watcher.py": {
+      "sha256": "0f7824627eae6ce1189f09bce889d3f6e949671c16564b2da56e765c5a92bc09",
+      "size": 10072
+    },
+    "rfsn_hybrid/intent_classifier.py": {
+      "sha256": "1b7230d87963f3da7ff6f0122dd13289d0c0a0d20679dbd22099db82675d05c3",
+      "size": 6610
+    },
+    "rfsn_hybrid/lifecycle.py": {
+      "sha256": "45624c09fc9aec6e338134efe12449013918aec49a4665849afa9138c7867084",
+      "size": 9332
+    },
+    "rfsn_hybrid/logging_config.py": {
+      "sha256": "c1d1c4336e255723091f0c7bb3260927ea7a242126d3cb4a26c00ede3aa21bea",
+      "size": 7562
+    },
+    "rfsn_hybrid/memory.py": {
+      "sha256": "51b50401330f7b4be23b52f33a5f01f505817e74d04309f152198451cb84c254",
+      "size": 9994
+    },
+    "rfsn_hybrid/metrics.py": {
+      "sha256": "de011a85c056532fe381eb94505f260528bea289f1af3393db7b21eee90656fc",
+      "size": 8376
+    },
+    "rfsn_hybrid/prompting.py": {
+      "sha256": "4da4ee0f55c9e9619e5bd2c66039d7d3f5ddaf7c340525766ef16a249553f934",
+      "size": 1612
+    },
+    "rfsn_hybrid/relationships.py": {
+      "sha256": "39c9f1d8e2d01746f6be838129aca992e891bdee88aea5e76220d56eb0d312f9",
+      "size": 11788
+    },
+    "rfsn_hybrid/semantic_memory.py": {
+      "sha256": "ca0a211d041194be6b4744cdf903cd6a9eb4c422061fa5b8601df1082c7b2c35",
+      "size": 10973
+    },
+    "rfsn_hybrid/state_machine.py": {
+      "sha256": "9abc64f5b2c7db94b89b3c874a63c27c94e7799c0c45e7f5e0e5472511a540ab",
+      "size": 4484
+    },
+    "rfsn_hybrid/storage.py": {
+      "sha256": "41e422a8dbf36eb0118a432b95efb3fe0eea286c5a1ba29ccc11882c0a0f7180",
+      "size": 2990
+    },
+    "rfsn_hybrid/streaming/__init__.py": {
+      "sha256": "2f9d741964e834c7d8d358cae8dfaaa2f3834169031609c34e05cbad43fa653c",
+      "size": 92
+    },
+    "rfsn_hybrid/streaming/frames.py": {
+      "sha256": "80a42eaadab905880d2bf5af8acec8e5e0a28befa572dcf33caeb548acddc22b",
+      "size": 6135
+    },
+    "rfsn_hybrid/streaming/transaction.py": {
+      "sha256": "d964ad7c5b9b6a73299f752d26b247fe8e405c817e8e1f70ffc34b3b3fedddc4",
+      "size": 10364
+    },
+    "rfsn_hybrid/types.py": {
+      "sha256": "f2395789b5e1cddf7a1d91326c9eb8eed6cfda637c4d5c00ef4a05ac91a73605",
+      "size": 2840
+    },
+    "rfsn_hybrid/util.py": {
+      "sha256": "f74fdc24f66e7412a0722839ba78c00fd4deae10ee3057a0b0f2912f0540ee26",
+      "size": 137
+    },
+    "rfsn_hybrid/version.py": {
+      "sha256": "b5011e995ef671a9a44bda0c667d3d5488348dd0323293114ba1eaf3189f6a76",
+      "size": 6019
+    },
+    "pyproject.toml": {
+      "sha256": "cfe62c181b520eee6d023ac012d67dd43d7e30afe81888e5b60b6e48b518e094",
+      "size": 650
+    },
+    "version.json": {
+      "sha256": "ffab4cee288bbc38bb5074bb34ca91ef2cb0e7373df4a8f0718a7d094992d39c",
+      "size": 188
+    },
+    "tests/test_backpressure.py": {
+      "sha256": "f1884903accb1143d5ad795f02a7de3fe1136c655eac745be125de7719c24f72",
+      "size": 6474
+    },
+    "tests/test_config.py": {
+      "sha256": "f30300af4b7367e7b762a8b31cedc527806e44912a500ce4647b99a40a9d78a1",
+      "size": 6049
+    },
+    "tests/test_dev_watch.py": {
+      "sha256": "1b865e18c116c9bd8c63709facfebf8344c4a771a2e7cf0c773b7049d289e7b2",
+      "size": 479
+    },
+    "tests/test_export.py": {
+      "sha256": "a89bfcfdde24ea623511ab256c3cf8cc4dfc8252306c635b836bf3ee7ead847c",
+      "size": 7130
+    },
+    "tests/test_integration.py": {
+      "sha256": "a0284883dbc301e68ea01c35ce59a0782746b04edc6a203329c436f721eb9977",
+      "size": 6297
+    },
+    "tests/test_intent_classifier.py": {
+      "sha256": "19715241277614eabf85f2109bf2e8e943810482a6f1b208969e89034550acd4",
+      "size": 5384
+    },
+    "tests/test_lifecycle.py": {
+      "sha256": "f22f804f2c3806445f29910ce486b200f4e8315b0b227bcea22df1aaa4a40f63",
+      "size": 5703
+    },
+    "tests/test_memory.py": {
+      "sha256": "4abc5d217c9fe78de6bb327a101a6976053761d93a59d5fd6d8f9be23664ec26",
+      "size": 8828
+    },
+    "tests/test_prompting.py": {
+      "sha256": "7c6319df5cc968a1df9e37fafc1cb23c0038e8151764b05fb4abebb182856595",
+      "size": 1173
+    },
+    "tests/test_relationships.py": {
+      "sha256": "609becd6b70f0d036d6542cd5eea3a2e2e00221b0697eecabb70ee55beb04f91",
+      "size": 7320
+    },
+    "tests/test_replay_determinism.py": {
+      "sha256": "04e5979682a843e4af95be92950504a033ad4fc269c42bf994580b4e6d903498",
+      "size": 3900
+    },
+    "tests/test_semantic_memory.py": {
+      "sha256": "fb75de6b95b8a0c288ebcc23fe396f9c43a6f6d771cb80268423a148ddf0504c",
+      "size": 5938
+    },
+    "tests/test_state_machine.py": {
+      "sha256": "d28c38af3af15ca0fa40c6648175be3e0038921049e9de3bd1a3350426635dff",
+      "size": 1232
+    },
+    "tests/test_storage.py": {
+      "sha256": "7aca6417f389c343e411492b807afc4f13fd3cd4266aa2d32aba3ca13e7e33b8",
+      "size": 1071
+    },
+    "tests/test_transaction_abort.py": {
+      "sha256": "1fc53956c702f5df7216ffe10a17b4ec73b067fe51b79f1401f82ce65eb6cc42",
+      "size": 5463
+    },
+    "tests/test_types.py": {
+      "sha256": "c5ecae58c517c81458ab9eadd918080145b949502fd6f80d07387589b1e34a0d",
+      "size": 2403
+    }
+  }
+}

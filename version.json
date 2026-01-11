@@ -1,0 +1,10 @@
+{
+    "version": "0.4.1",
+    "abi": 1,
+    "min_python": "3.9",
+    "components": {
+        "engine": "0.4.1",
+        "state_machine": "0.4.1",
+        "semantic_memory": "0.4.1"
+    }
+}
