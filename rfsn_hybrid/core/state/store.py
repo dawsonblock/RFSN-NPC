@@ -84,6 +84,31 @@ class StateStore:
         """Current facts."""
         with self._lock:
             return list(self._facts)
+
+    def get_history(self, limit: int = 50) -> List[Dict]:
+        """Retrieve conversation history from event log."""
+        with self._lock:
+            # Filter for chat events
+            history = []
+            for event in self._event_log:
+                if event.event_type == EventType.FACT_ADD:
+                    tags = event.payload.get("tags", [])
+                    if "chat" in tags:
+                        # Determine role
+                        role = "npc" if "npc" in tags else "user"
+                        # Extract content (strip prefix "Name: ")
+                        text = event.payload.get("text", "")
+                        if ": " in text:
+                            _, content = text.split(": ", 1)
+                        else:
+                            content = text
+                            
+                        history.append({
+                            "role": role,
+                            "content": content,
+                            "timestamp": event.timestamp
+                        })
+            return history[-limit:]
     
     def dispatch(self, event: StateEvent) -> bool:
         """Dispatch an event to modify state."""
