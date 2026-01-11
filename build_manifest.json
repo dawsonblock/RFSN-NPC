@@ -1,9 +1,9 @@
 {
   "version": "0.5.2",
   "abi": 1,
-  "build_time": "2026-01-10T23:18:00.716908",
+  "build_time": "2026-01-10T23:25:00.801537",
   "python_version": "3.9.7",
-  "file_count": 53,
+  "file_count": 56,
   "files": {
     "rfsn_hybrid/__init__.py": {
       "sha256": "33ed2699b938603456c438b95c2c58c32d0a176791cffd8706113058009e897c",
@@ -89,6 +89,10 @@
       "sha256": "4da4ee0f55c9e9619e5bd2c66039d7d3f5ddaf7c340525766ef16a249553f934",
       "size": 1612
     },
+    "rfsn_hybrid/rate_limit.py": {
+      "sha256": "3bf2298fb0e171c50bc9717f6cb61b9010cb52a345be71e24ae0d97ba3756220",
+      "size": 6465
+    },
     "rfsn_hybrid/relationships.py": {
       "sha256": "39c9f1d8e2d01746f6be838129aca992e891bdee88aea5e76220d56eb0d312f9",
       "size": 11788
@@ -134,8 +138,12 @@
       "size": 6019
     },
     "build_manifest.json": {
-      "sha256": "f4039fc0a1ebffc3a339ae6db458574e6e6051ffbec08583e0622a43529df25d",
-      "size": 7247
+      "sha256": "4b0e6856b6085306683d6691ff2443388f7221568a5918571e316ab2ebe2c821",
+      "size": 7817
+    },
+    "docker-compose.yml": {
+      "sha256": "23368bfa5e884117a1f3530f032eaa55815c9a4500e6bbd0fa273d31982afd76",
+      "size": 841
     },
     "pyproject.toml": {
       "sha256": "72140919782026d11589895d31a9d548b4c85a9aac958f6cb86cf7c7495eea52",
@@ -184,6 +192,10 @@
     "tests/test_prompting.py": {
       "sha256": "7c6319df5cc968a1df9e37fafc1cb23c0038e8151764b05fb4abebb182856595",
       "size": 1173
+    },
+    "tests/test_rate_limit.py": {
+      "sha256": "b63051a72ad1d8d118e73c51b1214888b93b1dd037ab817ac0391108bc2fb71d",
+      "size": 4329
     },
     "tests/test_relationships.py": {
       "sha256": "609becd6b70f0d036d6542cd5eea3a2e2e00221b0697eecabb70ee55beb04f91",

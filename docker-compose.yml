@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  rfsn:
+    build: .
+    container_name: rfsn-engine
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    environment:
+      - RFSN_DATA_DIR=/app/data
+      - RFSN_LOG_LEVEL=INFO
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Optional: Run with a specific model
+  rfsn-with-model:
+    build: .
+    container_name: rfsn-with-model
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    environment:
+      - RFSN_MODEL_PATH=/app/models/model.gguf
+      - RFSN_DATA_DIR=/app/data
+    command: [ "python", "-m", "rfsn_hybrid.api", "--model", "/app/models/model.gguf" ]
+    profiles:
+      - with-model
