@@ -1,10 +1,14 @@
 {
-    "version": "0.4.1",
+    "version": "0.5.2",
     "abi": 1,
     "min_python": "3.9",
-    "components": {
-        "engine": "0.4.1",
-        "state_machine": "0.4.1",
-        "semantic_memory": "0.4.1"
-    }
+    "build_date": "2026-01-11",
+    "features": [
+        "event_reducer",
+        "frame_protocol",
+        "backpressure",
+        "lifecycle",
+        "validation",
+        "health_checks"
+    ]
 }

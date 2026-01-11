@@ -1,9 +1,9 @@
 {
-  "version": "0.4.1",
+  "version": "0.5.2",
   "abi": 1,
-  "build_time": "2026-01-10T23:13:23.497223",
+  "build_time": "2026-01-10T23:18:00.716908",
   "python_version": "3.9.7",
-  "file_count": 49,
+  "file_count": 53,
   "files": {
     "rfsn_hybrid/__init__.py": {
       "sha256": "33ed2699b938603456c438b95c2c58c32d0a176791cffd8706113058009e897c",
@@ -60,6 +60,10 @@
     "rfsn_hybrid/file_watcher.py": {
       "sha256": "0f7824627eae6ce1189f09bce889d3f6e949671c16564b2da56e765c5a92bc09",
       "size": 10072
+    },
+    "rfsn_hybrid/health.py": {
+      "sha256": "3276c58e57c626eb9146c5c3235766508ded066e9e13e41058e8735f6cca8ec9",
+      "size": 7257
     },
     "rfsn_hybrid/intent_classifier.py": {
       "sha256": "1b7230d87963f3da7ff6f0122dd13289d0c0a0d20679dbd22099db82675d05c3",
@@ -121,21 +125,25 @@
       "sha256": "f74fdc24f66e7412a0722839ba78c00fd4deae10ee3057a0b0f2912f0540ee26",
       "size": 137
     },
+    "rfsn_hybrid/validation.py": {
+      "sha256": "9bbbeab30909df43225695eb54f3fa7d4b2a37a33a8ed35d6cb8873014b55766",
+      "size": 4790
+    },
     "rfsn_hybrid/version.py": {
       "sha256": "b5011e995ef671a9a44bda0c667d3d5488348dd0323293114ba1eaf3189f6a76",
       "size": 6019
     },
     "build_manifest.json": {
-      "sha256": "3e1c27abb00c7a337b69f6bcf5826487b090898279a88e314319d8b331593d1e",
-      "size": 7108
+      "sha256": "f4039fc0a1ebffc3a339ae6db458574e6e6051ffbec08583e0622a43529df25d",
+      "size": 7247
     },
     "pyproject.toml": {
-      "sha256": "cfe62c181b520eee6d023ac012d67dd43d7e30afe81888e5b60b6e48b518e094",
+      "sha256": "72140919782026d11589895d31a9d548b4c85a9aac958f6cb86cf7c7495eea52",
       "size": 650
     },
     "version.json": {
-      "sha256": "ffab4cee288bbc38bb5074bb34ca91ef2cb0e7373df4a8f0718a7d094992d39c",
-      "size": 188
+      "sha256": "38d0df40a95c92114524c880aacfa69fe6f24abd4f92fe3efe21a819055ee553",
+      "size": 264
     },
     "tests/test_backpressure.py": {
       "sha256": "f1884903accb1143d5ad795f02a7de3fe1136c655eac745be125de7719c24f72",
@@ -152,6 +160,10 @@
     "tests/test_export.py": {
       "sha256": "a89bfcfdde24ea623511ab256c3cf8cc4dfc8252306c635b836bf3ee7ead847c",
       "size": 7130
+    },
+    "tests/test_health.py": {
+      "sha256": "1a02f8fba4e9c65f6562b0f3003b01f10ac21b69cdec090f45316d8e603df3f9",
+      "size": 4121
     },
     "tests/test_integration.py": {
       "sha256": "a0284883dbc301e68ea01c35ce59a0782746b04edc6a203329c436f721eb9977",
@@ -200,6 +212,10 @@
     "tests/test_types.py": {
       "sha256": "c5ecae58c517c81458ab9eadd918080145b949502fd6f80d07387589b1e34a0d",
       "size": 2403
+    },
+    "tests/test_validation.py": {
+      "sha256": "e1ec5c345efa0bccb104401978441656c74d65c32b4cd899669873a7c9e1043f",
+      "size": 3874
     }
   }
 }

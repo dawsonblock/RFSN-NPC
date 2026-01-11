@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rfsn_hybrid_engine"
-version = "0.4.1"
+version = "0.5.2"
 description = "RFSN state machine + local GGUF LLM for governed NPC dialogue"
 requires-python = ">=3.9"
 dependencies = [

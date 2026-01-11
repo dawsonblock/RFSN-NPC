@@ -1,44 +1,45 @@
-# RFSN Hybrid Engine v0.4.1
+# RFSN Hybrid Engine v0.5.2
 
-A lightweight NPC dialogue engine combining a **finite-state affinity system** with **local LLM inference** via `llama-cpp-python`. Designed for Skyrim mods (Mantella-compatible) but usable for any stateful NPC conversation system.
+A production-hardened NPC dialogue engine combining a **finite-state affinity system** with **local LLM inference** via `llama-cpp-python`. Designed for Skyrim mods (Mantella-compatible) but usable for any stateful NPC conversation system.
 
 ## What's New
 
-### v0.4.1
-- **REST API**: FastAPI server for game integration
-- **Config System**: YAML/JSON NPC presets with built-in characters
-- **Export Utilities**: Export conversations to Markdown/JSON/text
-- **More Tests**: 83 total tests (up from 41)
+### v0.5.2
+- **Input Validation**: Sanitization and validation for all inputs
+- **Health Checks**: Component monitoring and dependency verification
+- **Optimized Reducer**: O(1) dispatch table with snapshot caching
+- **LRU Embedding Cache**: Cached query embeddings for semantic search
+- **160 Tests** (up from 83)
 
-### v0.4.0
-- **Semantic Memory**: FAISS-based vector search for intelligent fact retrieval
-- **Smart Intent Classification**: LLM-based classification for accurate event parsing
+### v0.5.0 - Production Hardening
+- Version compatibility enforcement
+- Event reducer with single-writer state
+- FRAME protocol for transactional streaming
+- Backpressure handling with bounded queues
+- Lifecycle management with graceful shutdown
+- Build manifests with SHA256 verification
+
+### v0.4.x
+- REST API, Config System, Export Utilities, Semantic Memory
 
 ## Features
 
-- **State Machine**: Affinity (-1.0 to 1.0) and mood tracking with event-driven transitions
-- **Persistent Memory**: Conversation history, facts, and NPC state survive restarts
-- **Template Support**: Llama 3 and Phi-3 ChatML prompt formats with auto-detection
-- **Semantic Memory**: Vector similarity search for fact retrieval
-- **Smart Classification**: Use the LLM to classify player intent
-- **REST API**: HTTP endpoints for game integration
-- **NPC Presets**: Built-in personalities (Lydia, Belethor, Guards, etc.)
-- **Dev Watch**: Hot-reload Python modules during development
-- **Zero Cloud Dependencies**: Runs entirely local with GGUF models
+| Category | Features |
+|----------|----------|
+| **State** | Affinity (-1 to 1), mood tracking, event transitions |
+| **Memory** | Persistent history, facts, semantic search (FAISS) |
+| **Inference** | Local GGUF models, Llama 3 / Phi-3 templates |
+| **Integration** | REST API, NPC presets, conversation export |
+| **Production** | Validation, health checks, structured logging, metrics |
+| **Safety** | Transaction support, backpressure, graceful shutdown |
 
 ## Installation
 
 ```bash
-# Standard install
+# Standard
 pip install .
 
-# With semantic memory (FAISS + sentence-transformers)
-pip install ".[semantic]"
-
-# With REST API (FastAPI + uvicorn)
-pip install ".[api]"
-
-# Everything
+# With semantic memory + API + dev tools
 pip install ".[all]"
 
 # Mac Metal acceleration
@@ -49,31 +50,35 @@ CMAKE_ARGS='-DLLAMA_METAL=on' pip install .
 
 ### CLI Mode
 ```bash
-# Basic usage
 python -m rfsn_hybrid.cli --model "/path/to/model.gguf"
-
-# With semantic memory
-python -m rfsn_hybrid.cli --model "/path/to/model.gguf" --semantic
-
-# With smart classification
-python -m rfsn_hybrid.cli --model "/path/to/model.gguf" --smart-classify
 ```
 
-### API Server Mode
+### API Server
 ```bash
-# Start API server (mock mode - no LLM required)
-python -m rfsn_hybrid.api
-
-# With LLM
 python -m rfsn_hybrid.api --model "/path/to/model.gguf"
-
-# API docs at http://localhost:8000/docs
+# Docs at http://localhost:8000/docs
 ```
 
-### Demo Script
-```bash
-# Run interactive demo (no model required)
-python demo.py
+### Health Check
+```python
+from rfsn_hybrid.health import run_health_checks
+
+health = run_health_checks()
+print(f"Healthy: {health.healthy}")
+for check in health.checks:
+    print(f"  {check.name}: {check.message}")
+```
+
+### Input Validation
+```python
+from rfsn_hybrid.validation import validate_config, sanitize_text
+
+config = {"npc_name": "Lydia", "role": "Housecarl"}
+result = validate_config(config)
+if not result.is_valid:
+    print(result.errors)
+
+user_input = sanitize_text("  Hello world  \x00")  # "Hello world"
 ```
 
 ## API Endpoints
@@ -81,107 +86,59 @@ python demo.py
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/` | GET | Health check |
-| `/presets` | GET | List available NPC presets |
-| `/npcs` | GET | List active NPC sessions |
-| `/npc/{id}` | GET | Get NPC status |
-| `/npc/{id}/chat` | POST | Send message, get response |
-| `/npc/{id}/reset` | POST | Reset NPC state |
-| `/npc/{id}/history` | GET | Get conversation history |
-
-### Example API Usage
-```bash
-# Chat with Lydia
-curl -X POST http://localhost:8000/npc/lydia/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hello Lydia!", "player_name": "Dragonborn"}'
-```
-
-## CLI Commands
-
-| Command | Description |
-|---------|-------------|
-| `quit` | Exit the CLI |
-| `forget` | Wipe all conversation, facts, and state |
-| `reload` | Hot-reload Python modules |
-| `status` | Show NPC state and statistics |
+| `/presets` | GET | List NPC presets |
+| `/npc/{id}/chat` | POST | Chat with NPC |
+| `/npc/{id}/status` | GET | Get NPC state |
+| `/npc/{id}/reset` | POST | Reset NPC |
 
 ## NPC Presets
-
-Built-in character presets:
 
 | Preset | Name | Role |
 |--------|------|------|
 | `lydia` | Lydia | Housecarl |
-| `merchant` | Belethor | General Goods Merchant |
-| `guard` | Whiterun Guard | City Guard |
+| `merchant` | Belethor | Merchant |
+| `guard` | Whiterun Guard | Guard |
 | `innkeeper` | Hulda | Innkeeper |
 | `mage` | Farengar | Court Wizard |
-
-```python
-from rfsn_hybrid.config import get_preset, ConfigManager
-
-# Get built-in preset
-lydia = get_preset("lydia")
-
-# Or use ConfigManager for custom configs
-manager = ConfigManager("./my_npcs")
-my_npc = manager.get("custom_character")
-```
-
-## Export Conversations
-
-```python
-from rfsn_hybrid.export import ConversationExporter
-
-exporter = ConversationExporter(memory, state, facts)
-
-# Export to different formats
-exporter.to_markdown("./exports/lydia.md")
-exporter.to_json("./exports/lydia.json")
-exporter.to_text("./exports/lydia.txt")
-
-# Get summary
-print(exporter.summary())
-```
 
 ## Architecture
 
 ```
 rfsn_hybrid/
-├── types.py            # RFSNState, Event dataclasses
-├── state_machine.py    # Affinity transitions, event parsing
-├── storage.py          # Conversation + fact persistence
-├── semantic_memory.py  # FAISS vector search
-├── intent_classifier.py# LLM-based intent classification
-├── config.py           # NPC presets and configuration
-├── export.py           # Conversation export utilities
-├── api.py              # FastAPI REST server
-├── prompting.py        # LLM prompt templates
-├── engine.py           # Core orchestrator
-├── cli.py              # Interactive CLI
-└── dev_watch.py        # File change detection
+├── engine.py          # Core LLM orchestration
+├── types.py           # RFSNState, Event dataclasses
+├── state_machine.py   # Affinity transitions
+├── storage.py         # Persistence layer
+├── semantic_memory.py # FAISS vector search
+├── api.py             # FastAPI server
+├── cli.py             # Interactive CLI
+├── validation.py      # Input validation
+├── health.py          # Health checks
+├── lifecycle.py       # Startup/shutdown management
+├── metrics.py         # Performance metrics
+├── logging_config.py  # Structured logging
+├── core/
+│   ├── state/         # Event reducer + store
+│   └── queues.py      # Backpressure handling
+└── streaming/         # FRAME protocol
 ```
 
 ## Tests
 
 ```bash
-# Run all tests
-pytest -v
-
-# Run with coverage
-pytest --cov=rfsn_hybrid --cov-report=term-missing
-
-# Tests: 83 passing
+pytest -v                           # Run all tests
+pytest --cov=rfsn_hybrid            # With coverage
+# 160 tests passing
 ```
 
 ## Dependencies
 
-**Required:**
-- `llama-cpp-python>=0.2.90`
+**Required:** `llama-cpp-python>=0.2.90`
 
 **Optional:**
 - `[semantic]`: faiss-cpu, sentence-transformers
 - `[api]`: fastapi, uvicorn
+- `[dev]`: pytest
 
 ## License
 
