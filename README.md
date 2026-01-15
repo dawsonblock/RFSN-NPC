@@ -226,11 +226,11 @@ curl "http://localhost:8000/npc/lydia/status"
 Use RFSN in your own Python projects:
 
 ```python
-from rfsn_hybrid.engine import RFSNEngine
+from rfsn_hybrid.engine import RFSNHybridEngine
 from rfsn_hybrid.types import RFSNState
 
 # Initialize engine
-engine = RFSNEngine(model_path="/path/to/model.gguf")
+engine = RFSNHybridEngine(model_path="/path/to/model.gguf")
 
 # Create NPC state
 state = RFSNState(
