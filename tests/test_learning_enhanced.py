@@ -10,7 +10,6 @@ Tests the full learning pipeline including:
 - Deterministic replay
 """
 import tempfile
-import random
 import pytest
 
 from rfsn_hybrid.learning import (
