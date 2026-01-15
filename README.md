@@ -555,8 +555,8 @@ mypy rfsn_hybrid/ --ignore-missing-imports
 
 **Recommended GGUF Models:**
 - **Phi-3-mini-4k-instruct** (3.8B) - Fast, good for development
-- **Llama-3-8B-Instruct** (8B) - Balanced performance/quality
-- **Llama-3-70B-Instruct** (70B) - Highest quality, requires more resources
+- **Llama 3 8B Instruct** (8B) - Balanced performance/quality
+- **Llama 3 70B Instruct** (70B) - Highest quality, requires more resources
 
 **Where to find models:**
 - [Hugging Face](https://huggingface.co/models?library=gguf) - Search for GGUF models
