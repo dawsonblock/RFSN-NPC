@@ -36,6 +36,12 @@ class EventType(str, Enum):
     
     # Relationship changes
     RELATIONSHIP_UPDATE = "relationship_update"
+    RELATIONSHIP_TRUST_DELTA = "relationship_trust_delta"
+    RELATIONSHIP_FEAR_DELTA = "relationship_fear_delta"
+    RELATIONSHIP_ATTRACTION_DELTA = "relationship_attraction_delta"
+    RELATIONSHIP_RESENTMENT_DELTA = "relationship_resentment_delta"
+    RELATIONSHIP_OBLIGATION_DELTA = "relationship_obligation_delta"
+    RELATIONSHIP_DECAY = "relationship_decay"
     
     # State management
     STATE_RESET = "state_reset"
