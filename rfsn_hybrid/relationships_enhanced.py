@@ -1,31 +1,29 @@
 """
 Enhanced relationship dynamics for RFSN NPC system.
 
-Extends the existing relationship system with continuous dynamics:
-- Trust (grows slowly, decays quickly)
-- Fear (spikes quickly, fades slowly)
-- Attraction (chemistry, charisma response)
-- Resentment (accumulates, decays slowly)
-- Obligation (sense of debt or duty)
+Extends the existing relationship system with continuous dynamics
+that change over time and decay naturally.
 
-All changes flow through the reducer. No autonomous behavior.
+Key principles:
+- Values change ONLY through reducer
+- All changes are explainable
+- Decay rates are explicit constants
+- LLM may describe relationships, never define them
 """
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
-from typing import Dict, Optional
-
-logger = logging.getLogger(__name__)
+from datetime import datetime
+from typing import Dict
 
 
 # Decay and growth constants (per hour of game time)
 DECAY_RATES = {
-    "trust": 0.01,          # Trust decays slowly
+    "trust": 0.01,          # Trust decays slowly toward neutral
     "fear": 0.05,           # Fear fades faster
-    "attraction": 0.03,     # Attraction decays slowly
-    "resentment": 0.02,     # Resentment decays slowly
-    "obligation": 0.03,     # Obligations fade slowly
+    "attraction": 0.03,     # Attraction fades moderately
+    "resentment": 0.02,     # Resentment lingers
+    "obligation": 0.04,     # Obligations fade with time
 }
 
 GROWTH_RATES = {
@@ -34,14 +32,6 @@ GROWTH_RATES = {
     "attraction": 0.06,     # Attraction builds steadily
     "resentment": 0.10,     # Resentment accumulates quickly
     "obligation": 0.08,     # Obligations build moderately
-}
-
-DECAY_RATES = {
-    "trust": 0.01,          # Trust decays slowly
-    "fear": 0.05,           # Fear fades faster
-    "attraction": 0.03,     # Attraction fades moderately
-    "resentment": 0.02,     # Resentment lingers
-    "obligation": 0.04,     # Obligations fade with time
 }
 
 
@@ -154,28 +144,3 @@ class RelationshipDynamics:
             parts.append("obligated")
         
         return ", ".join(parts) if parts else "neutral feelings"
-
-
-# Add RelationshipDynamics to existing NPCOpinion
-@dataclass
-class EnhancedNPCOpinion(NPCOpinion):
-    """
-    Enhanced NPC opinion with continuous relationship dynamics.
-    
-    Extends NPCOpinion with new dynamic attributes that
-    change over time and decay naturally.
-    """
-    dynamics: RelationshipDynamics = field(default_factory=RelationshipDynamics)
-    
-    def to_dict(self) -> Dict:
-        d = super().to_dict()
-        d["dynamics"] = self.dynamics.to_dict()
-        return d
-    
-    @classmethod
-    def from_dict(cls, data: Dict) -> "EnhancedNPCOpinion":
-        dynamics_data = data.pop("dynamics", {})
-        opinion = super().from_dict(data)
-        if dynamics_data:
-            opinion.dynamics = RelationshipDynamics.from_dict(dynamics_data)
-        return opinion
