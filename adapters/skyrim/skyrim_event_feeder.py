@@ -325,10 +325,8 @@ class SkyrimEventFeeder:
             
             logger.info(f"Sending event to {endpoint}: {payload['event_type']}")
             
-            # In real implementation:
-            # response = http_post(endpoint, json=payload)
-            # if response.status != 200:
-            #     logger.error(f"Failed to send event: {response}")
+            # In a real implementation, perform an HTTP POST request to the endpoint with the
+            # payload and handle any non-200 responses appropriately, including logging failures.
     
     def update(self):
         """
