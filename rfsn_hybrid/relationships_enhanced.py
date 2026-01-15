@@ -17,24 +17,6 @@ from datetime import datetime
 from typing import Dict
 
 
-# Decay and growth constants (per hour of game time)
-DECAY_RATES = {
-    "trust": 0.01,          # Trust decays slowly toward neutral
-    "fear": 0.05,           # Fear fades faster
-    "attraction": 0.03,     # Attraction fades moderately
-    "resentment": 0.02,     # Resentment lingers
-    "obligation": 0.04,     # Obligations fade with time
-}
-
-GROWTH_RATES = {
-    "trust": 0.05,          # Trust builds slowly
-    "fear": 0.12,           # Fear grows quickly
-    "attraction": 0.06,     # Attraction builds steadily
-    "resentment": 0.10,     # Resentment accumulates quickly
-    "obligation": 0.08,     # Obligations build moderately
-}
-
-
 @dataclass
 class RelationshipDynamics:
     """

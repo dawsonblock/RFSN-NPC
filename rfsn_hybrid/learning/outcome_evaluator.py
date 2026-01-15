@@ -151,7 +151,9 @@ class OutcomeEvaluator:
             )
         
         # Reward proportional to magnitude of change
-        intensity = abs(affinity_delta) * 5.0  # Scale to 0-1 range
+        # Scale affinity change to learning intensity (cap at 1.0)
+        AFFINITY_TO_INTENSITY_SCALE = 5.0
+        intensity = abs(affinity_delta) * AFFINITY_TO_INTENSITY_SCALE  # Scale to 0-1 range
         return self.evaluate(outcome_type, context, action, intensity)
     
     def evaluate_from_player_event(
