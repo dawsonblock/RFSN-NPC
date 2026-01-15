@@ -198,13 +198,17 @@ class LearningState:
             self.enabled = data.get("enabled", self.enabled)
             
             # Support both old format (single weights array) and new format (namespaced)
-            if "weights_style" in data or "weights_decision" in data:
-                # New namespaced format
-                namespace_key = f"weights_{self.namespace}"
+            namespace_key = f"weights_{self.namespace}"
+            
+            if namespace_key in data:
+                # New namespaced format - our namespace exists
                 weights_data = data.get(namespace_key, [])
-            else:
-                # Old format - backward compatible
+            elif "weights" in data:
+                # Old format without namespaces - backward compatible
                 weights_data = data.get("weights", [])
+            else:
+                # No weights for this namespace
+                weights_data = []
             
             for w_dict in weights_data:
                 weight = ActionWeight.from_dict(w_dict)

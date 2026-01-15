@@ -110,14 +110,13 @@ class RFSNAPIServer:
                     "event_type": event.event_type,
                     "npc_id": event.npc_id,
                     "timestamp": event.ts,
-                except HTTPException:
-                    # Let FastAPI handle validation errors as‐is
-                    raise
-                except Exception as e:
-                    logger.error(f"Error processing environment event: {e}")
-                    raise HTTPException(status_code=500, detail="Internal server error")
+                }
+            except HTTPException:
+                # Let FastAPI handle validation errors as-is
+                raise
+            except Exception as e:
                 logger.error(f"Error processing environment event: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail="Internal server error")
 
 def create_app():
     return RFSNAPIServer().app
