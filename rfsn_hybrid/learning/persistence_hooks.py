@@ -8,14 +8,13 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 
 from .learning_config import LearningConfig
 from .learning_state import LearningState
 from .bandit import LinUCBBandit
-from .feature_encoder import FeatureEncoder, FEATURE_SCHEMA_VERSION
+from .feature_encoder import FEATURE_SCHEMA_VERSION
 
 logger = logging.getLogger(__name__)
 

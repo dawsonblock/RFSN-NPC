@@ -11,20 +11,17 @@ Run with:
 import os
 import sys
 import tempfile
-from typing import List
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from rfsn_hybrid.learning import (
     LearningConfig,
-    LearningPresets,
     LearningState,
     FeatureEncoder,
     LinUCBBandit,
     OutcomeEvaluator,
     PolicyAdjuster,
-    PolicyBias,
     OutcomeType,
     LearningPersistence,
 )
@@ -334,8 +331,12 @@ def demo_summary():
     print(f"{'='*70}\n")
 
 
-def main():
-    """Run all demos."""
+def main(interactive: bool = True):
+    """Run all demos.
+    
+    Args:
+        interactive: If True, pause between demos. Set to False for automated runs.
+    """
     print("\n" + "="*70)
     print("  RFSN NPC Learning Module - Interactive Demo")
     print("="*70)
@@ -354,14 +355,23 @@ def main():
     
     for demo in demos:
         demo()
-        input("\nPress Enter to continue...")
+        if interactive:
+            input("\nPress Enter to continue...")
+        else:
+            print("\n[Auto-advancing to next demo...]\n")
     
     demo_summary()
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="RFSN Learning Module Demo")
+    parser.add_argument("--non-interactive", action="store_true",
+                       help="Run without pausing between demos")
+    args = parser.parse_args()
+    
     try:
-        main()
+        main(interactive=not args.non_interactive)
     except KeyboardInterrupt:
         print("\n\nDemo interrupted. Goodbye!")
         sys.exit(0)

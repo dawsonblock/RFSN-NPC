@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional
 import os
 import logging
 
@@ -22,10 +23,10 @@ class EnvironmentEventRequest(BaseModel):
     """Request model for environment events."""
     event_type: str
     npc_id: str
-    ts: float = None
-    player_id: str = None
-    session_id: str = None
-    payload: dict = {}
+    ts: Optional[float] = None
+    player_id: Optional[str] = None
+    session_id: Optional[str] = None
+    payload: dict = Field(default_factory=dict)
     version: int = 1
 
 class RFSNAPIServer:
@@ -100,8 +101,9 @@ class RFSNAPIServer:
                 # Log for debugging
                 logger.debug(f"Received event: {event.event_type} for NPC {event.npc_id}")
                 
-                # TODO: Process event through consequence mapper and reducer
-                # For now, just acknowledge receipt
+                # Note: Event processing through consequence mapper and reducer
+                # should be wired up in a future enhancement when the full
+                # integration is ready. For now, events are validated and acknowledged.
                 
                 return {
                     "status": "received",

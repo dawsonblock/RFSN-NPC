@@ -27,9 +27,6 @@ from rfsn_hybrid.learning import (
 
 
 class TestLearningConfig:
-
-
-class TestLearningConfig:
     """Tests for LearningConfig."""
     
     def test_default_config_disabled(self):
@@ -161,16 +158,11 @@ class TestLinUCBBandit:
         context = {"feat1": 1.0}
         action = "good_action"
         
-        initial_score = bandit.score_actions(context, [action])[action]
-        
         # Provide positive feedback multiple times
         for _ in range(10):
             bandit.update(context, action, reward=0.8)
         
-        final_score = bandit.score_actions(context, [action])[action]
-        
-        # Score should increase (though UCB may complicate this)
-        # At minimum, the arm should have been updated
+        # Verify the arm was updated
         assert bandit.arms[action].n == 10
         assert bandit.arms[action].theta["feat1"] != 0.0
     
@@ -290,7 +282,6 @@ class TestLearningIntegration:
     def test_end_to_end_learning_cycle(self):
         """Test complete learning cycle with all components."""
         # Setup
-        config = LearningPresets.deterministic_test(seed=42)
         learning_state = LearningState(enabled=True, max_entries=10)
         bandit = LinUCBBandit(alpha=0.2, prng_seed=42)
         encoder = FeatureEncoder()
@@ -321,16 +312,12 @@ class TestLearningIntegration:
         bandit.update(context_dict, chosen_action, outcome.reward)
         learning_state.update_weight(context_key, chosen_action, outcome.reward)
         
-        # Get new scores
-        new_scores = bandit.score_actions(context_dict, actions)
-        
         # Verify learning occurred
         assert bandit.total_pulls == 1
         assert learning_state.get_weight(context_key, chosen_action) > 1.0
     
     def test_learning_disabled_baseline(self):
         """With learning disabled, behavior should be neutral."""
-        config = LearningConfig(enabled=False)
         learning_state = LearningState(enabled=False)
         
         # Update should have no effect

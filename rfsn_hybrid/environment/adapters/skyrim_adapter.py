@@ -100,12 +100,18 @@ class SkyrimAdapter:
     
         return events
     
-    def start_file_watcher(self, callback):
+    def start_file_watcher(self, callback, poll_interval: float = 1.0):
         """
         Start a background thread that watches for new event files.
         
         Args:
             callback: Function to call with each new event
+            poll_interval: Time in seconds between polls (default: 1.0).
+                          Adjust based on event frequency and system load.
+        
+        Note:
+            For production use with high event frequency, consider using
+            a file system watcher library like 'watchdog' for better efficiency.
         """
         if not self.file_drop_dir:
             raise ValueError("file_drop_dir must be set to use file watcher")
@@ -121,11 +127,11 @@ class SkyrimAdapter:
                         callback(event)
                     except Exception as e:
                         logger.error(f"Error in callback: {e}")
-                time.sleep(1.0)  # Poll every second
+                time.sleep(poll_interval)
         
         thread = threading.Thread(target=watch_loop, daemon=True)
         thread.start()
-        logger.info(f"Started file watcher on {self.file_drop_dir}")
+        logger.info(f"Started file watcher on {self.file_drop_dir} (poll interval: {poll_interval}s)")
 
 
 # Skyrim/Papyrus integration examples
