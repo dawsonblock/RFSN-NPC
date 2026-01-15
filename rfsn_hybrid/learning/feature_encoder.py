@@ -161,7 +161,7 @@ class FeatureEncoder:
         
         # Create a stable hash of the event sequence
         event_str = "|".join(sorted(events))
-        hash_val = int(hashlib.md5(event_str.encode()).hexdigest()[:8], 16)
+        hash_val = int(hashlib.sha256(event_str.encode()).hexdigest()[:8], 16)
         
         # Normalize to 0-1
         return (hash_val % 1000) / 1000.0
