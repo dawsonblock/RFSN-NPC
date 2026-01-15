@@ -324,8 +324,8 @@ Pre-configured NPCs ready to use out of the box:
 
 **Usage:**
 ```bash
-# CLI with preset
-python -m rfsn_hybrid.cli --preset lydia --model "/path/to/model.gguf"
+# CLI with preset (Lydia as Housecarl)
+python -m rfsn_hybrid.cli --npc Lydia --role Housecarl --model "/path/to/model.gguf"
 
 # API endpoint
 curl -X POST "http://localhost:8000/npc/merchant/chat" \
