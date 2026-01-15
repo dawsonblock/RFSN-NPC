@@ -7,6 +7,7 @@ Does NOT create new behaviors - only reweights existing reducer decisions.
 from __future__ import annotations
 
 import random
+import hashlib
 from typing import Dict, List, Optional, Tuple
 
 from .learning_state import LearningState, ActionWeight
@@ -31,6 +32,7 @@ class PolicyAdjuster:
         outcome_evaluator: OutcomeEvaluator,
         exploration_rate: float = 0.1,
         learning_rate: float = 0.05,
+        seed: Optional[int] = None,
     ):
         """
         Initialize policy adjuster.
@@ -40,11 +42,16 @@ class PolicyAdjuster:
             outcome_evaluator: Evaluates outcomes to generate rewards
             exploration_rate: Probability of exploring (0.0 to 1.0)
             learning_rate: How quickly to update weights (0.0 to 1.0)
+            seed: Random seed for deterministic exploration (optional)
         """
         self.learning_state = learning_state
         self.outcome_evaluator = outcome_evaluator
         self.exploration_rate = max(0.0, min(1.0, exploration_rate))
         self.learning_rate = max(0.0, min(1.0, learning_rate))
+        
+        # Use dedicated RNG for replay determinism
+        self.rng = random.Random(seed)
+        self.seed = seed
     
     def get_action_weight(self, context_key: str, action: str) -> float:
         """
@@ -61,7 +68,7 @@ class PolicyAdjuster:
             return 1.0
         
         # Epsilon-greedy: sometimes return neutral weight for exploration
-        if random.random() < self.exploration_rate:
+        if self.rng.random() < self.exploration_rate:
             return 1.0
         
         return self.learning_state.get_weight(context_key, action)
