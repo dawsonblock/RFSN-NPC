@@ -546,8 +546,8 @@ mypy rfsn_hybrid/ --ignore-missing-imports
 
 | Feature | Package | Purpose |
 |---------|---------|---------|
-| `[semantic]` | `faiss-cpu>=1.7.0`<br>`sentence-transformers>=2.2.0` | Vector search and fact retrieval |
-| `[api]` | `fastapi>=0.100.0`<br>`uvicorn>=0.20.0` | REST API server |
+| `[semantic]` | - `faiss-cpu>=1.7.0`<br>- `sentence-transformers>=2.2.0` | Vector search and fact retrieval |
+| `[api]` | - `fastapi>=0.100.0`<br>- `uvicorn>=0.20.0` | REST API server |
 | `[dev]` | `pytest>=8.0.0` | Testing framework |
 | `[all]` | All above | Complete feature set |
 
