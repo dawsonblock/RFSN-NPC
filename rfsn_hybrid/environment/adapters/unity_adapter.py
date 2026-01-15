@@ -7,7 +7,7 @@ RFSN with Unity games via HTTP.
 from __future__ import annotations
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Optional
 
 from ..event_schema import EnvironmentEvent
 
