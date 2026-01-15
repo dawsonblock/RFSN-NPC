@@ -227,24 +227,21 @@ Use RFSN in your own Python projects:
 
 ```python
 from rfsn_hybrid.engine import RFSNHybridEngine
-from rfsn_hybrid.types import RFSNState
 
 # Initialize engine
 engine = RFSNHybridEngine(model_path="/path/to/model.gguf")
 
-# Create NPC state
-state = RFSNState(
-    npc_name="Lydia",
-    role="Housecarl",
-    affinity=0.0,
-    mood="Neutral",
-    player_name="Dragonborn"
+# Generate response (engine manages NPC state internally)
+response = engine.handle_message(
+    npc_id="lydia",
+    text="Hello, how are you?",
+    user_name="Dragonborn"
 )
 
-# Generate response
-response = engine.generate(state, "Hello, how are you?")
-print(response.text)
-print(f"Affinity: {response.new_state.affinity}")
+# Access response data
+print(response["text"])  # NPC's response
+print(f"Affinity: {response['state']['affinity']}")  # Updated state
+print(f"Facts used: {len(response['facts_used'])}")  # Context facts
 ```
 
 ### 4️⃣ Advanced Features
