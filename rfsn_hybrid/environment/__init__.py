@@ -19,6 +19,20 @@ Design:
 from .event_adapter import EventAdapter, GameEvent, GameEventType
 from .consequence_mapper import ConsequenceMapper, ConsequenceSignal, ConsequenceType
 from .signal_normalizer import SignalNormalizer
+from .event_schema import (
+    EnvironmentEvent,
+    EnvironmentEventType,
+    dialogue_started_event,
+    dialogue_choice_event,
+    player_sentiment_event,
+    player_hostility_event,
+    combat_result_event,
+    quest_update_event,
+    proximity_update_event,
+    gift_event,
+    time_passed_event,
+)
+from .adapters import UnityAdapter, SkyrimAdapter
 
 __all__ = [
     "EventAdapter",
@@ -28,4 +42,20 @@ __all__ = [
     "ConsequenceSignal",
     "ConsequenceType",
     "SignalNormalizer",
+    # Common event schema
+    "EnvironmentEvent",
+    "EnvironmentEventType",
+    # Event builders
+    "dialogue_started_event",
+    "dialogue_choice_event",
+    "player_sentiment_event",
+    "player_hostility_event",
+    "combat_result_event",
+    "quest_update_event",
+    "proximity_update_event",
+    "gift_event",
+    "time_passed_event",
+    # Game engine adapters
+    "UnityAdapter",
+    "SkyrimAdapter",
 ]

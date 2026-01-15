@@ -1,17 +1,32 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import os
+import logging
 
 from .engine import ENGINE
 from .version import __version__
+from .environment import EnvironmentEvent
+
+logger = logging.getLogger(__name__)
 
 # ... (rest of imports/models)
 
 class ChatRequest(BaseModel):
     message: str
     player_name: str = "Player"
+
+
+class EnvironmentEventRequest(BaseModel):
+    """Request model for environment events."""
+    event_type: str
+    npc_id: str
+    ts: float = None
+    player_id: str = None
+    session_id: str = None
+    payload: dict = {}
+    version: int = 1
 
 class RFSNAPIServer:
     def __init__(self) -> None:
@@ -64,6 +79,40 @@ class RFSNAPIServer:
             if npc_id in ENGINE._stores:
                 del ENGINE._stores[npc_id]
             return {"status": "reset", "npc_id": npc_id}
+        
+        @self.app.post("/env/event")
+        def receive_environment_event(event_req: EnvironmentEventRequest):
+            """
+            Receive environment events from game engines (Unity, Skyrim).
+            
+            Events are validated and converted to internal format,
+            then processed to update NPC state and learning systems.
+            """
+            try:
+                # Convert to EnvironmentEvent
+                event = EnvironmentEvent.from_dict(event_req.dict())
+                
+                # Validate
+                is_valid, error_msg = event.validate()
+                if not is_valid:
+                    raise HTTPException(status_code=400, detail=error_msg)
+                
+                # Log for debugging
+                logger.debug(f"Received event: {event.event_type} for NPC {event.npc_id}")
+                
+                # TODO: Process event through consequence mapper and reducer
+                # For now, just acknowledge receipt
+                
+                return {
+                    "status": "received",
+                    "event_type": event.event_type,
+                    "npc_id": event.npc_id,
+                    "timestamp": event.ts,
+                }
+                
+            except Exception as e:
+                logger.error(f"Error processing environment event: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
 
 def create_app():
     return RFSNAPIServer().app
