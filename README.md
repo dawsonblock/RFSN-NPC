@@ -11,7 +11,7 @@
 
 A production-hardened NPC dialogue engine combining a **finite-state affinity system** with **local LLM inference** via `llama-cpp-python`. Designed for Skyrim mods (Mantella-compatible) but usable for any stateful NPC conversation system.
 
-[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [API Reference](#-api-reference) • [Contributing](#-contributing)
 
 </div>
 
