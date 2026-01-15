@@ -420,7 +420,7 @@ store = SemanticFactStore("facts.json", cache_size=1000)
 # Recommended: Phi-3-mini (3.8B) or Llama-3-8B-Instruct
 
 # 3. Reduce context window for faster inference
-engine = RFSNEngine(model_path="model.gguf", max_tokens=150)
+engine = RFSNHybridEngine(model_path="model.gguf")
 ```
 
 **System Requirements:**
