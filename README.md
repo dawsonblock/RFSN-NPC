@@ -316,11 +316,11 @@ Pre-configured NPCs ready to use out of the box:
 | `lydia` | Lydia | Housecarl | 0.6 (Neutral) | Loyal, dutiful, protective |
 | `merchant` | Belethor | Merchant | 0.5 (Neutral) | Greedy, charming, opportunistic |
 | `guard` | Whiterun Guard | City Guard | 0.4 (Wary) | Suspicious, professional, alert |
-| `innkeeper` | Hulda | Innkeeper | 0.5 (Friendly) | Welcoming, gossipy, hospitable |
-| `mage` | Farengar | Court Wizard | 0.2 (Neutral) | Intellectual, impatient, scholarly |
-
-**Usage:**
-```bash
+| `lydia` | Lydia | Housecarl | 0.6 | Loyal, dutiful, protective |
+| `merchant` | Belethor | Merchant | 0.5 | Greedy, charming, opportunistic |
+| `guard` | Whiterun Guard | City Guard | 0.4 | Suspicious, professional, alert |
+| `innkeeper` | Hulda | Innkeeper | 0.5 | Welcoming, gossipy, hospitable |
+| `mage` | Farengar | Court Wizard | 0.2 | Intellectual, impatient, scholarly |
 # CLI with preset (Lydia as Housecarl)
 python -m rfsn_hybrid.cli --npc Lydia --role Housecarl --model "/path/to/model.gguf"
 
