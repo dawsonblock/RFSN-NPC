@@ -14,7 +14,7 @@ Usage:
     3. Events are batched and throttled to avoid API spam
     4. Configure the RFSN_API_URL to point to your running RFSN server
 """
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 import time
