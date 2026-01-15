@@ -104,9 +104,9 @@ class TestLearningNamespaces:
                 namespace="style",
             )
             
-            # Weight should be updated from reward using default learning_rate=0.1
-            # Formula: new_weight = old_weight + learning_rate * reward
-            # = 1.0 + 0.1 * 0.5 = 1.05
+            # After updating, the weight should be computed using default learning_rate=0.1
+            # Formula (for the original update): new_weight = old_weight + learning_rate * reward
+            # = 1.0 + 0.1 * 0.5 = 1.05; this test ensures that value persists across save/reload.
             assert style_state2.get_weight("ctx1", "warm") == pytest.approx(1.05, abs=0.01)
             
             # Decision weight should not be in style namespace
