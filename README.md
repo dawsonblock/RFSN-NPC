@@ -232,11 +232,13 @@ from rfsn_hybrid.engine import RFSNHybridEngine
 engine = RFSNHybridEngine(model_path="/path/to/model.gguf")
 
 # Generate response (engine manages NPC state internally)
-response = engine.handle_message(
-    npc_id="lydia",
-    text="Hello, how are you?",
-    user_name="Dragonborn"
-)
+payload = {
+    "npc_id": "lydia",
+    "text": "Hello, how are you?",
+    # Optional fields (include if your integration needs them):
+    "user_name": "Dragonborn",
+}
+response = engine.handle_message(**payload)
 
 # Access response data
 print(response["text"])  # NPC's response
