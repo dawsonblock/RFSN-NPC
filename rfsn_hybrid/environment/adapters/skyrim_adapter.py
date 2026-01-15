@@ -90,7 +90,14 @@ class SkyrimAdapter:
                     
             except Exception as e:
                 logger.error(f"Error processing {file_path}: {e}")
-        
+                # Move corrupted file to prevent reprocessing
+                error_dir = self.file_drop_dir / "errors"
+                error_dir.mkdir(exist_ok=True)
+                try:
+                    file_path.rename(error_dir / file_path.name)
+                except OSError as move_error:
+                    logger.error(f"Could not move corrupted file {file_path}: {move_error}")
+    
         return events
     
     def start_file_watcher(self, callback):
