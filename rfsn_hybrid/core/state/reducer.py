@@ -3,6 +3,9 @@ Optimized pure reducer function for state transitions.
 
 Uses dispatch dictionary for O(1) event type lookup and
 minimizes deep copies for better performance.
+
+The reducer can optionally accept PolicyBias from the learning system
+to influence event processing, though currently events are deterministic.
 """
 from __future__ import annotations
 
@@ -18,6 +21,14 @@ from ...storage import Fact
 from ...util import clamp
 
 logger = logging.getLogger(__name__)
+
+# Optional import for PolicyBias (learning module)
+try:
+    from ...learning import PolicyBias
+    LEARNING_AVAILABLE = True
+except ImportError:
+    LEARNING_AVAILABLE = False
+    PolicyBias = None
 
 # Module-level constants for player events (avoid recreating on each call)
 _AFFINITY_MAP: Dict[str, float] = {
@@ -225,18 +236,33 @@ def reduce_state(
     state: RFSNState,
     event: StateEvent,
     facts: Optional[List[Fact]] = None,
+    policy_bias: Optional["PolicyBias"] = None,
 ) -> Tuple[RFSNState, Optional[List[Fact]], Optional[str]]:
     """
     Apply an event to produce a new state.
     
     Uses O(1) dispatch table lookup for performance.
     Minimizes copies - only creates new objects when necessary.
+    
+    Args:
+        state: Current NPC state
+        event: Event to apply
+        facts: Optional fact list
+        policy_bias: Optional learning bias (currently not used in event processing,
+                    but provided for future action selection integration)
+    
+    Returns:
+        Tuple of (new_state, new_facts, new_memory_text)
     """
     handler = _EVENT_HANDLERS.get(event.event_type)
     
     if handler is None:
         logger.warning(f"Unknown event type: {event.event_type}")
         return state, facts, None
+    
+    # Note: policy_bias is accepted but not currently used in event handlers
+    # This is because the current reducer is purely event-driven.
+    # Future enhancement: use policy_bias to adjust event strength or selection
     
     return handler(state, facts, event.payload)
 
@@ -245,12 +271,24 @@ def reduce_events(
     initial_state: RFSNState,
     events: List[StateEvent],
     initial_facts: Optional[List[Fact]] = None,
+    policy_bias: Optional["PolicyBias"] = None,
 ) -> Tuple[RFSNState, Optional[List[Fact]]]:
-    """Apply a sequence of events to get final state."""
+    """
+    Apply a sequence of events to get final state.
+    
+    Args:
+        initial_state: Starting state
+        events: List of events to apply
+        initial_facts: Starting facts
+        policy_bias: Optional learning bias
+    
+    Returns:
+        Tuple of (final_state, final_facts)
+    """
     state = initial_state
     facts = initial_facts
     
     for event in events:
-        state, facts, _ = reduce_state(state, event, facts)
+        state, facts, _ = reduce_state(state, event, facts, policy_bias)
     
     return state, facts
