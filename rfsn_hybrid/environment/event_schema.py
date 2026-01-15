@@ -130,7 +130,10 @@ class EnvironmentEvent:
                 return False, f"Invalid event_type: {self.event_type}"
         
         # Validate timestamp
-        if self.ts <= 0:
+        if self.ts is None:
+            return False, "timestamp is required"
+        
+        if self.ts < 0:
             return False, "Invalid timestamp"
         
         # Validate payload
