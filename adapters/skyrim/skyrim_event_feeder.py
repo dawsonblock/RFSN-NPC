@@ -66,6 +66,14 @@ class SkyrimEventFeeder:
     - Priority queue (important events sent immediately)
     """
     
+    # Magnitude scaling constants (adjust for your game's economy)
+    ITEM_VALUE_MIN_MAGNITUDE = 0.1  # Minimum magnitude for any item
+    ITEM_VALUE_SCALE_GOLD = 1000.0  # Gold value for max magnitude
+    ITEM_VALUE_MAX_MAGNITUDE = 0.9  # Maximum magnitude boost from value
+    
+    STOLEN_ITEM_BASE_MAGNITUDE = 0.3  # Base magnitude for theft
+    CRIME_BOUNTY_SCALE = 1000.0  # Bounty for max magnitude
+    
     def __init__(
         self,
         api_url: str = "http://localhost:8000",
@@ -134,8 +142,13 @@ class SkyrimEventFeeder:
         from_player: bool = True,
     ):
         """Feed an item received event."""
-        # Scale magnitude by item value (0-1000 gold -> 0.1-1.0 magnitude)
-        magnitude = min(1.0, 0.1 + (item_value / 1000.0) * 0.9)
+        # Scale magnitude by item value
+        # Formula: min_mag + (value / scale) * max_boost
+        magnitude = min(
+            1.0,
+            self.ITEM_VALUE_MIN_MAGNITUDE + 
+            (item_value / self.ITEM_VALUE_SCALE_GOLD) * self.ITEM_VALUE_MAX_MAGNITUDE
+        )
         
         event = SkyrimEvent(
             event_type="item_received",
@@ -157,7 +170,11 @@ class SkyrimEventFeeder:
         item_value: int,
     ):
         """Feed an item stolen event."""
-        magnitude = min(1.0, 0.3 + (item_value / 1000.0) * 0.7)
+        magnitude = min(
+            1.0,
+            self.STOLEN_ITEM_BASE_MAGNITUDE + 
+            (item_value / self.ITEM_VALUE_SCALE_GOLD) * (1.0 - self.STOLEN_ITEM_BASE_MAGNITUDE)
+        )
         
         event = SkyrimEvent(
             event_type="item_stolen",
@@ -179,7 +196,7 @@ class SkyrimEventFeeder:
     ):
         """Feed a crime witnessed event."""
         # Scale by bounty
-        magnitude = min(1.0, bounty / 1000.0)
+        magnitude = min(1.0, bounty / self.CRIME_BOUNTY_SCALE)
         
         event = SkyrimEvent(
             event_type="witnessed_crime",
