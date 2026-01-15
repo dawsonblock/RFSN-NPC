@@ -564,7 +564,7 @@ mypy rfsn_hybrid/ --ignore-missing-imports
 MIT License – see the [MIT License text](https://opensource.org/licenses/MIT) for details.
 
 **In short:** You can use this project for any purpose, commercial or non-commercial, as long as you include the original copyright and license notice.
-
+MIT License – see the [`LICENSE`](LICENSE) file for details.
 ---
 
 ## 🌟 Acknowledgments
