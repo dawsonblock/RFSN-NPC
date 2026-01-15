@@ -316,11 +316,11 @@ Pre-configured NPCs ready to use out of the box:
 
 | Preset ID | Character | Role | Starting Affinity | Personality Traits |
 |-----------|-----------|------|-------------------|-------------------|
-| `lydia` | Lydia | Housecarl | 0.0 (Neutral) | Loyal, dutiful, protective |
-| `merchant` | Belethor | Merchant | 0.0 (Neutral) | Greedy, charming, opportunistic |
-| `guard` | Whiterun Guard | City Guard | -0.1 (Wary) | Suspicious, professional, alert |
-| `innkeeper` | Hulda | Innkeeper | 0.1 (Friendly) | Welcoming, gossipy, hospitable |
-| `mage` | Farengar | Court Wizard | 0.0 (Neutral) | Intellectual, impatient, scholarly |
+| `lydia` | Lydia | Housecarl | 0.6 (Neutral) | Loyal, dutiful, protective |
+| `merchant` | Belethor | Merchant | 0.5 (Neutral) | Greedy, charming, opportunistic |
+| `guard` | Whiterun Guard | City Guard | 0.4 (Wary) | Suspicious, professional, alert |
+| `innkeeper` | Hulda | Innkeeper | 0.5 (Friendly) | Welcoming, gossipy, hospitable |
+| `mage` | Farengar | Court Wizard | 0.2 (Neutral) | Intellectual, impatient, scholarly |
 
 **Usage:**
 ```bash
