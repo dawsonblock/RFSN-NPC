@@ -250,9 +250,8 @@ class TestEndToEndWiring:
             user_name="Player"
         )
         
-        # Context should include the env event
+        # Context should include the env event (may or may not appear based on timing)
         context_key = chat_response2["decision"]["context_key"]
-        assert "eevents:" in context_key or "gift" in str(context_key).lower() or True  # May or may not appear based on timing
         
         # NPC should have facts about both interactions
         store = engine.get_store("LoopNPC")
