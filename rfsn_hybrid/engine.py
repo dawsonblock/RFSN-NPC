@@ -121,7 +121,14 @@ class RFSNHybridEngine:
                 return self._policy_adjusters[npc_id]
 
             base_dir = os.environ.get("RFSN_LEARNING_DIR", os.path.join("state", "learning"))
-            os.makedirs(base_dir, exist_ok=True)
+            try:
+                os.makedirs(base_dir, exist_ok=True)
+            except FileExistsError:
+                # Directory was created by another process between checks; safe to ignore.
+                pass
+            except OSError as e:
+                logger.error("Failed to create learning directory '%s': %s", base_dir, e)
+                raise
             decision_path = os.path.join(base_dir, f"{npc_id}_decision.json")
             style_path = os.path.join(base_dir, f"{npc_id}_style.json")
 
