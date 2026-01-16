@@ -39,6 +39,7 @@ from .learning.policy_adjuster import PolicyAdjuster
 
 # Constants for learning feedback
 AFFINITY_DELTA_EPSILON = 1e-9  # Minimum affinity change to trigger learning feedback
+STYLE_ACTION_PREFIX = "style_for:"
 
 class RFSNHybridEngine:
     """
@@ -191,7 +192,14 @@ class RFSNHybridEngine:
         return list(reversed(env_types))
 
     def handle_env_event(self, event: EnvironmentEvent) -> Dict[str, Any]:
-        """Ingest an environment event and apply deterministic consequences."""
+        """Ingest an environment event and apply deterministic consequences.
+
+        Fixes v13 corruption:
+        - mapping dict is valid
+        - unsupported event types return a helpful list
+        - env fact string is built safely
+        - learning feedback uses a defined STYLE_ACTION_PREFIX
+        """
         is_valid, err = event.validate()
         if not is_valid:
             return {"ok": False, "error": err}
@@ -199,37 +207,65 @@ class RFSNHybridEngine:
         store = self.get_store(event.npc_id)
         pre = store.state
 
+        # Normalize incoming type string
+        event_type_key = (event.event_type or "").strip().lower()
+
+        # Map EnvironmentEventType strings -> GameEventType enum
         mapping: Dict[str, GameEventType] = {
+            # Dialogue
             "dialogue_started": GameEventType.DIALOGUE_START,
             "dialogue_ended": GameEventType.DIALOGUE_END,
             "dialogue_choice": GameEventType.DIALOGUE_BRANCH_TAKEN,
+
+            # Player emotion/sentiment (best-effort mapping)
+            "player_sentiment": GameEventType.DIALOGUE_BRANCH_TAKEN,
             "player_hostility": GameEventType.COMBAT_START,
+
+            # Combat
             "combat_started": GameEventType.COMBAT_START,
             "combat_ended": GameEventType.COMBAT_END,
+            "combat_result": GameEventType.COMBAT_END,
             "combat_damage_taken": GameEventType.COMBAT_HIT_TAKEN,
             "combat_damage_dealt": GameEventType.COMBAT_HIT_DEALT,
+
+            # Quests
             "quest_started": GameEventType.QUEST_STARTED,
+            "quest_updated": GameEventType.QUEST_OBJECTIVE_COMPLETE,
             "quest_completed": GameEventType.QUEST_COMPLETED,
             "quest_failed": GameEventType.QUEST_FAILED,
+
+            # Proximity / social
+            "proximity_entered": GameEventType.PLAYER_NEARBY,
+            "proximity_exited": GameEventType.PLAYER_LEFT,
+            "proximity_update": GameEventType.PLAYER_NEARBY,
+
+            # Social actions
             "gift": GameEventType.ITEM_RECEIVED,
             "theft": GameEventType.ITEM_STOLEN,
-            "crime_witnessed": GameEventType.WITNESSED_CRIME,
             "assist": GameEventType.WITNESSED_GOOD_DEED,
-            event_type_key = (event.event_type or "").strip().lower()
-            game_type = mapping.get(event_type_key)
-            if game_type is None:
-                return {
-                    "ok": False,
-                    "error": f"Unsupported event_type: {event.event_type}",
-                    "supported_event_types": sorted(mapping.keys()),
-                }
+            "crime_witnessed": GameEventType.WITNESSED_CRIME,
 
-        game_type = mapping.get(event.event_type)
+            # Time / environment
+            "time_passed": GameEventType.TIME_PASSED,
+            "location_changed": GameEventType.LOCATION_CHANGED,
+        }
+
+        game_type = mapping.get(event_type_key)
         if game_type is None:
-            return {"ok": False, "error": f"Unsupported event_type: {event.event_type}"}
+            return {
+                "ok": False,
+                "error": f"Unsupported event_type: {event.event_type}",
+                "supported_event_types": sorted(mapping.keys()),
+            }
+
+        # Magnitude: prefer payload["magnitude"], else 0.5
+        payload = event.payload if isinstance(event.payload, dict) else {}
         magnitude = 0.5
-        if isinstance(event.payload, dict):
-            magnitude = float(event.payload.get("magnitude", magnitude))
+        try:
+            if "magnitude" in payload:
+                magnitude = float(payload.get("magnitude", magnitude))
+        except Exception:
+            magnitude = 0.5
         magnitude = max(0.0, min(1.0, magnitude))
 
         game_event = GameEvent(
@@ -237,64 +273,82 @@ class RFSNHybridEngine:
             npc_id=event.npc_id,
             player_id=event.player_id,
             magnitude=magnitude,
-            data=event.payload or {},
-            tags=["env", event.event_type],
+            data=payload or {},
+            tags=["env", event_type_key],
         )
 
+        # Map -> normalize -> reducer events
         signals = self._consequence_mapper.map_event(game_event)
         strong = self._signal_normalizer.filter_by_intensity(signals, min_intensity=0.08)
         normalized = self._signal_normalizer.aggregate(strong)
 
         applied_events: List[StateEvent] = []
         if normalized.affinity_delta:
-            applied_events.append(StateEvent(
-                event_type=EventType.AFFINITY_DELTA,
-                npc_id=event.npc_id,
-                payload={"delta": normalized.affinity_delta, "reason": f"env:{event.event_type}"},
-                source="env",
-            ))
+            applied_events.append(
+                StateEvent(
+                    event_type=EventType.AFFINITY_DELTA,
+                    npc_id=event.npc_id,
+                    payload={"delta": normalized.affinity_delta, "reason": f"env:{event_type_key}"},
+                    source="env",
+                )
+            )
         if normalized.mood_impact:
-            applied_events.append(StateEvent(
-                event_type=EventType.MOOD_SET,
-                npc_id=event.npc_id,
-                payload={"mood": normalized.mood_impact},
-                source="env",
-            ))
+            applied_events.append(
+                StateEvent(
+                    event_type=EventType.MOOD_SET,
+                    npc_id=event.npc_id,
+                    payload={"mood": normalized.mood_impact},
+                    source="env",
+                )
+            )
 
         if applied_events:
             store.dispatch_batch(applied_events)
 
-        env_text = f"[ENV] {event.event_type}"
-        if key in payload:
-            val = str(payload[key]).replace("\r", " ").replace("\n", " ").strip()
-            if len(val) > 200:
-            for key in ("magnitude", "item", "target", "location"):
-                if key in payload:
-                    val = str(payload[key])
-                    if len(val) > 200:
-                        val = val[:200] + "…"
-                    key_fields.append(f"{key}={val}")
-            if key_fields:
-                env_text = f"[ENV] {event.event_type}: " + ", ".join(key_fields)
-        elif payload is not None:
-            val = str(payload)
-            if len(val) > 200:
-                val = val[:200] + "…"
-            env_text = f"[ENV] {event.event_type}: {val}"
+        # Build a safe, short env fact string (no undefined vars, no broken indentation)
+        key_fields: List[str] = []
+        for k in (
+            "magnitude",
+            "item",
+            "quest",
+            "objective",
+            "result",
+            "damage",
+            "attacker",
+            "target",
+            "location",
+            "distance",
+            "sentiment",
+        ):
+            if k in payload:
+                v = str(payload.get(k))
+                v = v.replace("\r", " ").replace("\n", " ").strip()
+                if len(v) > 200:
+                    v = v[:200] + "…"
+                key_fields.append(f"{k}={v}")
+
+        env_text = f"[ENV] {event_type_key}"
+        if key_fields:
+            env_text = f"[ENV] {event_type_key}: " + ", ".join(key_fields)
+        elif payload:
+            v = str(payload).replace("\r", " ").replace("\n", " ").strip()
+            if len(v) > 200:
+                v = v[:200] + "…"
+            env_text = f"[ENV] {event_type_key}: {v}"
+
         if len(env_text) > 512:
             env_text = env_text[:512] + "…"
 
-        store.dispatch(StateEvent(
-            event_type=EventType.FACT_ADD,
-            npc_id=event.npc_id,
-            payload={
-                "text": env_text,
-                "tags": ["env", event.event_type],
-                "salience": 0.3,
-            },
-            source="env",
-        ))
+        store.dispatch(
+            StateEvent(
+                event_type=EventType.FACT_ADD,
+                npc_id=event.npc_id,
+                payload={"text": env_text, "tags": ["env", event_type_key], "salience": 0.3},
+                source="env",
+            )
+        )
 
+        # Learning feedback: use affinity delta caused by env event as reward proxy
         post = store.state
         affinity_delta = float(post.affinity - pre.affinity)
 
@@ -307,7 +361,7 @@ class RFSNHybridEngine:
         return {
             "ok": True,
             "npc_id": event.npc_id,
-            "event_type": event.event_type,
+            "event_type": event_type_key,
             "normalized": normalized.to_dict(),
             "state": post.to_dict(),
         }
