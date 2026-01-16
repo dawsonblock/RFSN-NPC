@@ -29,6 +29,10 @@ class EnvironmentEventRequest(BaseModel):
     payload: dict = Field(default_factory=dict)
     version: int = 1
 
+class LearningToggleRequest(BaseModel):
+    enabled: bool = True
+
+
 class RFSNAPIServer:
     def __init__(self) -> None:
         self.app = FastAPI(title="RFSN Hybrid", version=__version__)
@@ -80,39 +84,34 @@ class RFSNAPIServer:
             if npc_id in ENGINE._stores:
                 del ENGINE._stores[npc_id]
             return {"status": "reset", "npc_id": npc_id}
+
+        @self.app.post("/npc/{npc_id}/learning")
+        def set_learning(npc_id: str, req: LearningToggleRequest):
+            """Enable/disable bounded learning for an NPC."""
+            return ENGINE.enable_learning(npc_id=npc_id, enabled=req.enabled)
         
         @self.app.post("/env/event")
         def receive_environment_event(event_req: EnvironmentEventRequest):
             """
             Receive environment events from game engines (Unity, Skyrim).
-            
-            Events are validated and converted to internal format,
-            then processed to update NPC state and learning systems.
+
+            Validates and applies deterministic consequences into the reducer.
             """
             try:
-                # Convert to EnvironmentEvent
                 event = EnvironmentEvent.from_dict(event_req.dict())
                 
-                # Validate
                 is_valid, error_msg = event.validate()
                 if not is_valid:
                     raise HTTPException(status_code=400, detail=error_msg)
                 
-                # Log for debugging
                 logger.debug(f"Received event: {event.event_type} for NPC {event.npc_id}")
                 
-                # Note: Event processing through consequence mapper and reducer
-                # should be wired up in a future enhancement when the full
-                # integration is ready. For now, events are validated and acknowledged.
-                
-                return {
-                    "status": "received",
-                    "event_type": event.event_type,
-                    "npc_id": event.npc_id,
-                    "timestamp": event.ts,
-                }
+                result = ENGINE.handle_env_event(event)
+                if not result.get("ok", False):
+                    raise HTTPException(status_code=400, detail=result.get("error", "invalid event"))
+                return result
+
             except HTTPException:
-                # Let FastAPI handle validation errors as-is
                 raise
             except Exception as e:
                 logger.error(f"Error processing environment event: {e}")
