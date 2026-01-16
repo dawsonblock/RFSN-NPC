@@ -247,11 +247,23 @@ class RFSNHybridEngine:
         if applied_events:
             store.dispatch_batch(applied_events)
 
+        env_text = f"[ENV] {event.event_type}"
+        payload = getattr(event, "payload", None)
+        if isinstance(payload, dict):
+            key_fields: List[str] = []
+            for key in ("magnitude", "item", "target", "location"):
+                if key in payload:
+                    key_fields.append(f"{key}={payload[key]}")
+            if key_fields:
+                env_text = f"[ENV] {event.event_type}: " + ", ".join(key_fields)
+        elif payload is not None:
+            env_text = f"[ENV] {event.event_type}: {payload}"
+
         store.dispatch(StateEvent(
             event_type=EventType.FACT_ADD,
             npc_id=event.npc_id,
             payload={
-                "text": f"[ENV] {event.event_type} {event.payload}",
+                "text": env_text,
                 "tags": ["env", event.event_type],
                 "salience": 0.3,
             },
