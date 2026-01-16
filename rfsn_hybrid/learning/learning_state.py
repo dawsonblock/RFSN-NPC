@@ -69,12 +69,14 @@ class LearningState:
         min_weight: float = 0.5,
         max_weight: float = 2.0,
         enabled: bool = False,
+        namespace: str = "default",
     ):
         self.path = path
         self.max_entries = max_entries
         self.min_weight = min_weight
         self.max_weight = max_weight
         self.enabled = enabled
+        self.namespace = namespace  # "style", "decision", or "default"
         
         # Bounded storage: LRU eviction when full
         self.weights: Dict[Tuple[str, str], ActionWeight] = {}
@@ -194,7 +196,19 @@ class LearningState:
                 data = json.load(f)
             
             self.enabled = data.get("enabled", self.enabled)
-            weights_data = data.get("weights", [])
+            
+            # Support both old format (single weights array) and new format (namespaced)
+            namespace_key = f"weights_{self.namespace}"
+            
+            if namespace_key in data:
+                # New namespaced format - our namespace exists
+                weights_data = data.get(namespace_key, [])
+            elif "weights" in data:
+                # Old format without namespaces - backward compatible
+                weights_data = data.get("weights", [])
+            else:
+                # No weights for this namespace
+                weights_data = []
             
             for w_dict in weights_data:
                 weight = ActionWeight.from_dict(w_dict)
@@ -213,14 +227,25 @@ class LearningState:
         
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
         
-        data = {
+        # Load existing data to preserve other namespaces
+        existing_data = {}
+        if os.path.exists(self.path):
+            try:
+                with open(self.path, "r", encoding="utf-8") as f:
+                    existing_data = json.load(f)
+            except Exception:
+                pass
+        
+        # Update with current namespace data
+        namespace_key = f"weights_{self.namespace}"
+        existing_data.update({
             "enabled": self.enabled,
             "max_entries": self.max_entries,
-            "weights": [w.to_dict() for w in self.weights.values()],
-        }
+            namespace_key: [w.to_dict() for w in self.weights.values()],
+        })
         
         with open(self.path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+            json.dump(existing_data, f, indent=2)
     
     def to_dict(self) -> Dict:
         """Serialize state for debugging."""
