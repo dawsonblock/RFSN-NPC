@@ -72,7 +72,7 @@ class RFSNHybridEngine:
 
         # Decision policy (bounded action set)
         self._decision_policy = DecisionPolicy(enabled=True)
-        self._last_action: Dict[str, Tuple[str, str, str]] = {}  # npc_id -> (context_key, action, style_hint)
+        self._last_action: Dict[str, Tuple[str, str]] = {}  # npc_id -> (context_key, action)
 
         # Learning (bounded reweighting). Stored per NPC.
         self._outcome_evaluator = OutcomeEvaluator()
