@@ -39,7 +39,6 @@ from .learning.policy_adjuster import PolicyAdjuster
 
 # Constants for learning feedback
 AFFINITY_DELTA_EPSILON = 1e-9  # Minimum affinity change to trigger learning feedback
-STYLE_ACTION_PREFIX = "style_for:"  # Prefix for style namespace action identifiers
 
 class RFSNHybridEngine:
     """
