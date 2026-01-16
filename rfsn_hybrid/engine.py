@@ -216,9 +216,14 @@ class RFSNHybridEngine:
             "theft": GameEventType.ITEM_STOLEN,
             "crime_witnessed": GameEventType.WITNESSED_CRIME,
             "assist": GameEventType.WITNESSED_GOOD_DEED,
-            "time_passed": GameEventType.TIME_PASSED,
-            "location_changed": GameEventType.LOCATION_CHANGED,
-        }
+            event_type_key = (event.event_type or "").strip().lower()
+            game_type = mapping.get(event_type_key)
+            if game_type is None:
+                return {
+                    "ok": False,
+                    "error": f"Unsupported event_type: {event.event_type}",
+                    "supported_event_types": sorted(mapping.keys()),
+                }
 
         game_type = mapping.get(event.event_type)
         if game_type is None:
