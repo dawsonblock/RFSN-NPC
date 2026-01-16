@@ -192,13 +192,12 @@ class RFSNHybridEngine:
         return list(reversed(env_types))
 
     def handle_env_event(self, event: EnvironmentEvent) -> Dict[str, Any]:
-        """Ingest an environment event and apply deterministic consequences.
+        """Ingest an environment event, update NPC state, and return deterministic consequences.
 
-        Fixes v13 corruption:
-        - mapping dict is valid
-        - unsupported event types return a helpful list
-        - env fact string is built safely
-        - learning feedback uses a defined STYLE_ACTION_PREFIX
+        The event is validated and its type string normalized, then mapped to an internal
+        ``GameEventType``. An environment fact string is built safely, learning feedback is
+        generated using the configured style action prefix, and unsupported event types return
+        a helpful error including the list of supported types.
         """
         is_valid, err = event.validate()
         if not is_valid:
