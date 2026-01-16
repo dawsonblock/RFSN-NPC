@@ -183,6 +183,7 @@ class TestLearningWiring:
         )
         
         action_taken = response["decision"]["action"]
+        assert action_taken is not None
         
         # Send a positive environment event
         event = EnvironmentEvent(
