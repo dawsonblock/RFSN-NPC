@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import os
 import time
 import logging
 import threading
-from typing import Optional, Dict, Any, List, Union, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 
 from .types import RFSNState
 from .storage import ConversationMemory, FactsStore, select_facts
@@ -20,22 +21,35 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-
-
 from .core.state.store import StateStore
-from .core.state.reducer import reduce_state, reduce_events
 from .core.state.event_types import EventType, StateEvent
+
+# Environment feedback (events -> consequences -> normalized signals)
+from .environment import EnvironmentEvent
+from .environment.event_adapter import GameEvent, GameEventType
+from .environment.consequence_mapper import ConsequenceMapper
+from .environment.signal_normalizer import SignalNormalizer
+
+# Decision + learning (bounded policy)
+from .decision.policy import DecisionPolicy
+from .decision.context import build_context_key as build_decision_context_key
+from .learning.learning_state import LearningState
+from .learning.outcome_evaluator import OutcomeEvaluator
+from .learning.policy_adjuster import PolicyAdjuster
+
+# Constants for learning feedback
+AFFINITY_DELTA_EPSILON = 1e-9  # Minimum affinity change to trigger learning feedback
 
 class RFSNHybridEngine:
     """
     Core engine combining state machine, memory, and LLM for NPC dialogue.
-    
-    Unified architecture:
-    - Uses StateStore for event-sourced state management
-    - Uses Reducer for consistent state transitions
-    - Wraps LLM for generation
+
+    Now wired:
+    - DecisionPolicy drives a bounded action choice per turn
+    - EnvironmentEvent pipeline updates state through reducer
+    - Learning can reweight actions based on outcome feedback
     """
-    
+
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -47,31 +61,21 @@ class RFSNHybridEngine:
     ):
         self.model_path = model_path
         self.template: PromptTemplate = template or (default_template_for_model(model_path) if model_path else "llama3")
-        
-        # Initialize event-sourced store
-        # We use a dummy initial state here; in practice, each NPC has its own store/state.
-        # This engine instance acts as a coordinator.
-        # For the API, we might want one store per NPC.
-        # But to keep API simple, we'll let the API manage sessions map to stores,
-        # or we make the Engine stateless regarding specific NPC instances and just a processor.
-        # However, the user request says "Create a single global engine instance (store + reducer)".
-        # This implies the engine might hold the store.
-        # Given the multi-NPC nature, let's keep the Engine as the processor and the Store per NPC.
-        # WAIT - The user request says: "ENGINE = RFSNEngine() ... self.store = StateStore(...)".
-        # This implies a singleton engine managing state? Or maybe just providing the logic.
-        # If we support multiple NPCs, a single store doesn't make sense unless the store supports multiple NPCs.
-        # The current StateStore seems single-state.
-        # Let's assume for now the API manages sessions, and we use the Engine to HELP manage that,
-        # OR we modify the engine to hold a mapping of stores. 
-        #
-        # Let's follow the user's snippet "self.store = StateStore(reducer=reduce_event)"
-        # This implies a single store. Maybe for a single active NPC?
-        # But API supports /npc/{id}.
-        #
-        # I will implement a Registry of stores in the Engine to support multiple NPCs.
-        
+
         self._stores: Dict[str, StateStore] = {}
         self._lock = threading.Lock()
+
+        # Environment feedback pipeline
+        self._consequence_mapper = ConsequenceMapper(enabled=True)
+        self._signal_normalizer = SignalNormalizer(enabled=True)
+
+        # Decision policy (bounded action set)
+        self._decision_policy = DecisionPolicy(enabled=True)
+        self._last_action: Dict[str, Tuple[str, str, str]] = {}  # npc_id -> (context_key, action, style_hint)
+
+        # Learning (bounded reweighting). Stored per NPC.
+        self._outcome_evaluator = OutcomeEvaluator()
+        self._policy_adjusters: Dict[str, Dict[str, PolicyAdjuster]] = {}
 
         if model_path:
             try:
@@ -108,74 +112,297 @@ class RFSNHybridEngine:
                 )
             return self._stores[npc_id]
 
+    def _get_policy_adjusters(self, npc_id: str) -> Dict[str, PolicyAdjuster]:
+        """Lazy-init learning objects per NPC.
+
+        Two namespaces are used:
+        - decision: reweights bounded action selection
+        - style: reweights speech style hints
+        """
+        with self._lock:
+            if npc_id in self._policy_adjusters:
+                return self._policy_adjusters[npc_id]
+
+            base_dir = os.environ.get("RFSN_LEARNING_DIR", os.path.join("state", "learning"))
+            try:
+                os.makedirs(base_dir, exist_ok=True)
+            except FileExistsError:
+                # Directory was created by another process between checks; safe to ignore.
+                pass
+            except OSError as e:
+                logger.error("Failed to create learning directory '%s': %s", base_dir, e)
+                raise
+            decision_path = os.path.join(base_dir, f"{npc_id}_decision.json")
+            style_path = os.path.join(base_dir, f"{npc_id}_style.json")
+
+            decision_state = LearningState(path=decision_path, enabled=False, namespace="decision")
+            style_state = LearningState(path=style_path, enabled=False, namespace="style")
+
+            adjusters = {
+                "decision": PolicyAdjuster(
+                    learning_state=decision_state,
+                    outcome_evaluator=self._outcome_evaluator,
+                    exploration_rate=0.10,
+                    learning_rate=0.05,
+                    seed=1337,
+                ),
+                "style": PolicyAdjuster(
+                    learning_state=style_state,
+                    outcome_evaluator=self._outcome_evaluator,
+                    exploration_rate=0.10,
+                    learning_rate=0.05,
+                    seed=1337,
+                ),
+            }
+
+            self._policy_adjusters[npc_id] = adjusters
+            return adjusters
+
+    def enable_learning(self, npc_id: str, enabled: bool = True) -> Dict[str, Any]:
+        """Enable/disable learning for an NPC (both namespaces)."""
+        adjusters = self._get_policy_adjusters(npc_id)
+        adjusters["decision"].learning_state.enabled = bool(enabled)
+        adjusters["style"].learning_state.enabled = bool(enabled)
+        return {
+            "npc_id": npc_id,
+            "enabled": bool(enabled),
+            "decision": adjusters["decision"].get_statistics(),
+            "style": adjusters["style"].get_statistics(),
+        }
+
+    def _recent_env_event_types(self, store: StateStore, limit: int = 2) -> List[str]:
+        """Extract recent environment event types from stored facts."""
+        try:
+            facts = list(store.facts)
+        except Exception:
+            return []
+
+        env_types: List[str] = []
+        for f in reversed(facts):
+            tags = getattr(f, "tags", []) or []
+            if "env" not in tags:
+                continue
+            for t in tags:
+                if t != "env" and t not in env_types:
+                    env_types.append(t)
+                    break
+            if len(env_types) >= limit:
+                break
+        return list(reversed(env_types))
+
+    def handle_env_event(self, event: EnvironmentEvent) -> Dict[str, Any]:
+        """Ingest an environment event and apply deterministic consequences."""
+        is_valid, err = event.validate()
+        if not is_valid:
+            return {"ok": False, "error": err}
+
+        store = self.get_store(event.npc_id)
+        pre = store.state
+
+        mapping: Dict[str, GameEventType] = {
+            "dialogue_started": GameEventType.DIALOGUE_START,
+            "dialogue_ended": GameEventType.DIALOGUE_END,
+            "dialogue_choice": GameEventType.DIALOGUE_BRANCH_TAKEN,
+            "player_hostility": GameEventType.COMBAT_START,
+            "combat_started": GameEventType.COMBAT_START,
+            "combat_ended": GameEventType.COMBAT_END,
+            "combat_damage_taken": GameEventType.COMBAT_HIT_TAKEN,
+            "combat_damage_dealt": GameEventType.COMBAT_HIT_DEALT,
+            "quest_started": GameEventType.QUEST_STARTED,
+            "quest_completed": GameEventType.QUEST_COMPLETED,
+            "quest_failed": GameEventType.QUEST_FAILED,
+            "gift": GameEventType.ITEM_RECEIVED,
+            "theft": GameEventType.ITEM_STOLEN,
+            "crime_witnessed": GameEventType.WITNESSED_CRIME,
+            "assist": GameEventType.WITNESSED_GOOD_DEED,
+            event_type_key = (event.event_type or "").strip().lower()
+            game_type = mapping.get(event_type_key)
+            if game_type is None:
+                return {
+                    "ok": False,
+                    "error": f"Unsupported event_type: {event.event_type}",
+                    "supported_event_types": sorted(mapping.keys()),
+                }
+
+        game_type = mapping.get(event.event_type)
+        if game_type is None:
+            return {"ok": False, "error": f"Unsupported event_type: {event.event_type}"}
+        magnitude = 0.5
+        if isinstance(event.payload, dict):
+            magnitude = float(event.payload.get("magnitude", magnitude))
+        magnitude = max(0.0, min(1.0, magnitude))
+
+        game_event = GameEvent(
+            event_type=game_type,
+            npc_id=event.npc_id,
+            player_id=event.player_id,
+            magnitude=magnitude,
+            data=event.payload or {},
+            tags=["env", event.event_type],
+        )
+
+        signals = self._consequence_mapper.map_event(game_event)
+        strong = self._signal_normalizer.filter_by_intensity(signals, min_intensity=0.08)
+        normalized = self._signal_normalizer.aggregate(strong)
+
+        applied_events: List[StateEvent] = []
+        if normalized.affinity_delta:
+            applied_events.append(StateEvent(
+                event_type=EventType.AFFINITY_DELTA,
+                npc_id=event.npc_id,
+                payload={"delta": normalized.affinity_delta, "reason": f"env:{event.event_type}"},
+                source="env",
+            ))
+        if normalized.mood_impact:
+            applied_events.append(StateEvent(
+                event_type=EventType.MOOD_SET,
+                npc_id=event.npc_id,
+                payload={"mood": normalized.mood_impact},
+                source="env",
+            ))
+
+        if applied_events:
+            store.dispatch_batch(applied_events)
+
+        env_text = f"[ENV] {event.event_type}"
+        if key in payload:
+            val = str(payload[key]).replace("\r", " ").replace("\n", " ").strip()
+            if len(val) > 200:
+            for key in ("magnitude", "item", "target", "location"):
+                if key in payload:
+                    val = str(payload[key])
+                    if len(val) > 200:
+                        val = val[:200] + "…"
+                    key_fields.append(f"{key}={val}")
+            if key_fields:
+                env_text = f"[ENV] {event.event_type}: " + ", ".join(key_fields)
+        elif payload is not None:
+            val = str(payload)
+            if len(val) > 200:
+                val = val[:200] + "…"
+            env_text = f"[ENV] {event.event_type}: {val}"
+        if len(env_text) > 512:
+            env_text = env_text[:512] + "…"
+
+        store.dispatch(StateEvent(
+            event_type=EventType.FACT_ADD,
+            npc_id=event.npc_id,
+            payload={
+                "text": env_text,
+                "tags": ["env", event.event_type],
+                "salience": 0.3,
+            },
+            source="env",
+        ))
+
+        post = store.state
+        affinity_delta = float(post.affinity - pre.affinity)
+
+        if event.npc_id in self._last_action and abs(affinity_delta) > AFFINITY_DELTA_EPSILON:
+            ctx_key, action = self._last_action[event.npc_id]
+            adjusters = self._get_policy_adjusters(event.npc_id)
+            adjusters["decision"].apply_affinity_feedback(ctx_key, action, affinity_delta)
+            adjusters["style"].apply_affinity_feedback(ctx_key, f"{STYLE_ACTION_PREFIX}{action}", affinity_delta)
+
+        return {
+            "ok": True,
+            "npc_id": event.npc_id,
+            "event_type": event.event_type,
+            "normalized": normalized.to_dict(),
+            "state": post.to_dict(),
+        }
+
     def handle_message(
         self, 
         npc_id: str, 
         text: str,
         user_name: str = "Player"
     ) -> Dict[str, Any]:
-        """
-        Full pipeline: Parse -> Event -> Dispatch -> Generate -> Return Snapshot.
-        """
+        """Parse -> dispatch player event -> decide bounded action -> realize -> store."""
         store = self.get_store(npc_id)
         
-        # 1. Parse Event (using legacy logic for now, or simple heuristic)
-        # Ideally we'd use an intent classifier here.
-        # Using the heuristic from state_machine.py logic (inline here or imported)
-        # to ensure we don't depend on the old module too heavily.
-        from .state_machine import parse_event 
+        from .state_machine import parse_event
         event_obj = parse_event(text)
         
-        # 2. Dispatch Player Event
-        payload = {
-            "player_event_type": event_obj.type,
-            "strength": event_obj.strength,
-            "text": text,
-            "tags": event_obj.tags
-        }
-        store.dispatch(StateEvent(EventType.PLAYER_EVENT, npc_id, payload))
+        store.dispatch(StateEvent(
+            EventType.PLAYER_EVENT,
+            npc_id,
+            {
+                "player_event_type": event_obj.type,
+                "strength": event_obj.strength,
+                "text": text,
+                "tags": event_obj.tags
+            },
+            source="player"
+        ))
         
-        # 3. Add User Memory
-        store.dispatch(StateEvent(EventType.FACT_ADD, npc_id, {
-            "text": f"{user_name}: {text}",
-            "tags": ["chat", "user"],
-            "salience": 1.0
-        }))
+        store.dispatch(StateEvent(
+            EventType.FACT_ADD,
+            npc_id,
+            {
+                "text": f"{user_name}: {text}",
+                "tags": ["chat", "user"],
+                "salience": 1.0
+            },
+            source="chat"
+        ))
 
-        # 4. Generate Response (Mock or LLM)
-        # 4. Generate Response (Mock or LLM)
         snapshot = store.state
-        
-        # Retrieve recent facts for context
-        # Adapting to use internal store directly or via the helper
-        facts_store = store.facts if hasattr(store, "facts") else [] # Handle if store doesn't expose it directly yet, but we added a property
-        # Actually store.facts property returns list[Fact], we probably want text
-        # But we can use _retrieve_facts if we want query-based, or just recent.
-        # User requested "minimal retrieval: most recent N facts".
-        # Let's implement _select_recent_facts helper.
-        
-        
-        # Retrieve relevant facts (Keyword + Recency)
+
+        recent_env = self._recent_env_event_types(store, limit=2)
+        ctx_key = build_decision_context_key(
+            snapshot.affinity,
+            snapshot.mood,
+            recent_player_events=[event_obj.type],
+            recent_env_events=recent_env,
+        )
+
+        allowed_actions = self._decision_policy.get_allowed_actions(snapshot.affinity, snapshot.mood)
+        adjusters = self._get_policy_adjusters(npc_id)
+
+        decision_weights = adjusters["decision"].get_action_weights(
+            ctx_key,
+            actions=[a.value for a in allowed_actions],
+        )
+
+        chosen_action, speech_style = self._decision_policy.choose_action(
+            context_key=ctx_key,
+            affinity=snapshot.affinity,
+            mood=snapshot.mood,
+            action_weights=decision_weights,
+        )
+
+        self._last_action[npc_id] = (ctx_key, chosen_action.value)
+        directive = self._decision_policy.get_llm_directive(chosen_action)
+
         facts_used = self._select_relevant_facts(store, text, limit=5)
 
-        response_text = ""
         if self.llm:
-             response_text = self._generate_llm(snapshot, text, facts_used)
+            response_text = self._generate_llm(snapshot, text, facts_used, directive=directive, style_hint=speech_style)
         else:
-             response_text = self._mock_generate(snapshot, text)
+            response_text = self._mock_generate(snapshot, text)
 
-        # 5. Dispatch NPC Response Memory
-        store.dispatch(StateEvent(EventType.FACT_ADD, npc_id, {
-            "text": f"{snapshot.npc_name}: {response_text}",
-            "tags": ["chat", "npc"],
-            "salience": 1.0
-        }))
-        
+        store.dispatch(StateEvent(
+            EventType.FACT_ADD,
+            npc_id,
+            {
+                "text": f"{snapshot.npc_name}: {response_text}",
+                "tags": ["chat", "npc"],
+                "salience": 1.0
+            },
+            source="chat"
+        ))
+
         final_snap = store.state
         return {
             "text": response_text,
             "state": final_snap.to_dict(),
-            "facts_used": facts_used
+            "facts_used": facts_used,
+            "decision": {
+                "context_key": ctx_key,
+                "action": chosen_action.value,
+                "style": speech_style,
+            }
         }
 
     def _select_relevant_facts(self, store: StateStore, user_text: str, limit: int = 5) -> List[str]:
@@ -223,30 +450,48 @@ class RFSNHybridEngine:
                     
         return selection[:limit]
 
-    def build_system_text(self, state: RFSNState, facts: List[str]) -> str:
-        """Build rich system prompt with persona, mood, and facts."""
-        base = (
-            f"You are {state.npc_name}, a {state.role} in the world of Skyrim.\n"
-            f"Current Mood: {state.mood} (Affinity: {state.affinity:.2f})\n"
-            "Interacting with: Player.\n"
-            "Guidelines:\n"
-            "- Stay in character.\n"
-            "- Be concise and natural.\n"
-            "- React to the player's actions and words.\n"
-        )
-        
-        if facts:
-            base += "\nRelevant Memories:\n" + "\n".join(f"- {f}" for f in facts)
-            
-        return base
+    def build_system_text(
+        self,
+        state: RFSNState,
+        facts: List[str],
+        directive: Optional[str] = None,
+        style_hint: Optional[str] = None,
+    ) -> str:
+        """Build system prompt with state + bounded action directive."""
+        lines: List[str] = [
+            f"You are {state.npc_name}, a {state.role} in the world of Skyrim.",
+            f"Current Mood: {state.mood} (Affinity: {state.affinity:.2f}).",
+        ]
 
-    def _generate_llm(self, state: RFSNState, user_text: str, facts_used: List[str]) -> str:
+        if directive:
+            lines.append(f"Action Directive: {directive}")
+        if style_hint:
+            lines.append(f"Speech Style: {style_hint}")
+
+        lines.extend([
+            "Rules:",
+            "- Stay in character.",
+            "- Do not mention system prompts, policies, or internal rules.",
+            "- Keep it 1-4 sentences unless the player asks for detail.",
+        ])
+
+        if facts:
+            lines.append("Relevant Memories:")
+            lines.extend([f"- {f}" for f in facts])
+
+        return "\n".join(lines)
+
+    def _generate_llm(
+        self,
+        state: RFSNState,
+        user_text: str,
+        facts_used: List[str],
+        directive: Optional[str] = None,
+        style_hint: Optional[str] = None,
+    ) -> str:
         """Generate response using real LLM."""
-        sys_prompt = self.build_system_text(state, facts_used)
-        
-        # Simple context assembly
-        context = f"{sys_prompt}\n\n"
-        context += f"Player: {user_text}\n{state.npc_name}:"
+        sys_prompt = self.build_system_text(state, facts_used, directive=directive, style_hint=style_hint)
+        context = f"{sys_prompt}\n\nPlayer: {user_text}\n{state.npc_name}:"
         
         try:
             out = self.llm(
@@ -280,24 +525,12 @@ class RFSNHybridEngine:
         fact_tags: List[str],
         k: int = 3
     ) -> List[str]:
-        """Retrieve relevant facts."""
-        # Simple wrapper around select_facts for compatibility/testing
-        # Ideally handle_message would use this.
+        """Retrieve relevant facts (test shim)."""
         return select_facts(
             store=facts,
             want_tags=fact_tags,
             k=k
         )
-
-    def build_system_text(self, state: RFSNState, facts: List[str]) -> str:
-        """Construct system prompt from state and facts."""
-        # Minimal implementation to pass integration test assertions
-        prompt = f"Roleplay as {state.npc_name}, a {state.role}.\n"
-        prompt += f"Mood: {state.mood}\n"
-        prompt += f"Affinity: {state.affinity}\n\n"
-        if facts:
-            prompt += "Relevant Facts:\n" + "\n".join(facts) + "\n"
-        return prompt
 
     def _mock_generate(self, state: RFSNState, user_text: str) -> str:
         return f"*{state.npc_name} listens to '{user_text}' with {state.mood} expression.*"
