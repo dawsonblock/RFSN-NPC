@@ -260,11 +260,19 @@ class RFSNHybridEngine:
             key_fields: List[str] = []
             for key in ("magnitude", "item", "target", "location"):
                 if key in payload:
-                    if event.npc_id in self._last_action and abs(affinity_delta) > 1e-9:
-                        ctx_key, action, style = self._last_action[event.npc_id]
-                        adjusters = self._get_policy_adjusters(event.npc_id)
-                        adjusters["decision"].apply_affinity_feedback(ctx_key, action, affinity_delta)
-                        adjusters["style"].apply_affinity_feedback(ctx_key, style, affinity_delta)
+                    val = str(payload[key])
+                    if len(val) > 200:
+                        val = val[:200] + "…"
+                    key_fields.append(f"{key}={val}")
+            if key_fields:
+                env_text = f"[ENV] {event.event_type}: " + ", ".join(key_fields)
+        elif payload is not None:
+            val = str(payload)
+            if len(val) > 200:
+                val = val[:200] + "…"
+            env_text = f"[ENV] {event.event_type}: {val}"
+        if len(env_text) > 512:
+            env_text = env_text[:512] + "…"
 
         store.dispatch(StateEvent(
             event_type=EventType.FACT_ADD,
