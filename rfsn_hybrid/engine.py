@@ -264,7 +264,7 @@ class RFSNHybridEngine:
         try:
             if "magnitude" in payload:
                 magnitude = float(payload.get("magnitude", magnitude))
-        except Exception:
+        except (ValueError, TypeError):
             magnitude = 0.5
         magnitude = max(0.0, min(1.0, magnitude))
 
