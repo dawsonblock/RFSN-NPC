@@ -122,10 +122,11 @@ class RFSNHybridEngine:
 
             base_dir = os.environ.get("RFSN_LEARNING_DIR", os.path.join("state", "learning"))
             os.makedirs(base_dir, exist_ok=True)
-            path = os.path.join(base_dir, f"{npc_id}.json")
+            decision_path = os.path.join(base_dir, f"{npc_id}_decision.json")
+            style_path = os.path.join(base_dir, f"{npc_id}_style.json")
 
-            decision_state = LearningState(path=path, enabled=False, namespace="decision")
-            style_state = LearningState(path=path, enabled=False, namespace="style")
+            decision_state = LearningState(path=decision_path, enabled=False, namespace="decision")
+            style_state = LearningState(path=style_path, enabled=False, namespace="style")
 
             adjusters = {
                 "decision": PolicyAdjuster(
