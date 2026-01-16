@@ -261,9 +261,9 @@ class RFSNHybridEngine:
             store.dispatch_batch(applied_events)
 
         env_text = f"[ENV] {event.event_type}"
-        payload = getattr(event, "payload", None)
-        if isinstance(payload, dict):
-            key_fields: List[str] = []
+        if key in payload:
+            val = str(payload[key]).replace("\r", " ").replace("\n", " ").strip()
+            if len(val) > 200:
             for key in ("magnitude", "item", "target", "location"):
                 if key in payload:
                     val = str(payload[key])
