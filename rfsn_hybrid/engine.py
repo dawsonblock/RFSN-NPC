@@ -322,8 +322,9 @@ class RFSNHybridEngine:
             "sentiment",
         ):
             val = payload.get(k)
-            if val is None or val == "":
-                continue
+            v = str(val).replace("\r", " ").replace("\n", " ").strip()
+            v = " ".join(v.split())
+            if len(v) > 200:
             v = str(val).replace("\r", " ").replace("\n", " ").strip()
             if len(v) > 200:
                 v = v[:200] + "…"
