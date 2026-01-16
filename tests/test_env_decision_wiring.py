@@ -224,7 +224,7 @@ class TestEndToEndWiring:
         )
         
         assert "decision" in chat_response
-        action_taken = chat_response["decision"]["action"]
+        assert chat_response["decision"]["action"] is not None
         initial_affinity = chat_response["state"]["affinity"]
         
         # Step 2: Send positive environment event
