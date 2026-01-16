@@ -111,6 +111,9 @@ class OutcomeProcessor:
         return reward
 
 
+# Create a single, reusable instance of the processor at the module level.
+_processor = OutcomeProcessor()
+
 def evaluate_outcome(
     pre_affinity: float,
     post_affinity: float,
@@ -145,5 +148,4 @@ def evaluate_outcome(
         signal_magnitude=signal_magnitude,
     )
     
-    processor = OutcomeProcessor()
-    return processor.evaluate(outcome)
+    return _processor.evaluate(outcome)
