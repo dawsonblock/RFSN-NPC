@@ -1,7 +1,6 @@
 """
 Tests for decision policy module.
 """
-import pytest
 from rfsn_hybrid.decision import (
     DecisionPolicy,
     NPCAction,
