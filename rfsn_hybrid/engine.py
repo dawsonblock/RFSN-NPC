@@ -37,6 +37,10 @@ from .learning.learning_state import LearningState
 from .learning.outcome_evaluator import OutcomeEvaluator
 from .learning.policy_adjuster import PolicyAdjuster
 
+# Constants for learning feedback
+AFFINITY_DELTA_EPSILON = 1e-9  # Minimum affinity change to trigger learning feedback
+STYLE_ACTION_PREFIX = "style_for:"  # Prefix for style namespace action identifiers
+
 class RFSNHybridEngine:
     """
     Core engine combining state machine, memory, and LLM for NPC dialogue.
@@ -290,11 +294,11 @@ class RFSNHybridEngine:
         post = store.state
         affinity_delta = float(post.affinity - pre.affinity)
 
-        if event.npc_id in self._last_action and abs(affinity_delta) > 1e-9:
+        if event.npc_id in self._last_action and abs(affinity_delta) > AFFINITY_DELTA_EPSILON:
             ctx_key, action = self._last_action[event.npc_id]
             adjusters = self._get_policy_adjusters(event.npc_id)
             adjusters["decision"].apply_affinity_feedback(ctx_key, action, affinity_delta)
-            adjusters["style"].apply_affinity_feedback(ctx_key, f"style_for:{action}", affinity_delta)
+            adjusters["style"].apply_affinity_feedback(ctx_key, f"{STYLE_ACTION_PREFIX}{action}", affinity_delta)
 
         return {
             "ok": True,
