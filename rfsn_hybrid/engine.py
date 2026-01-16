@@ -263,7 +263,7 @@ class RFSNHybridEngine:
         try:
             if "magnitude" in payload:
                 magnitude = float(payload.get("magnitude", magnitude))
-                if magnitude != magnitude or magnitude in (float("inf"), float("-inf")):
+                if not (magnitude == magnitude and abs(magnitude) != float("inf")):
                     magnitude = 0.5
         except (ValueError, TypeError):
             magnitude = 0.5
