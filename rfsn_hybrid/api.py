@@ -98,7 +98,9 @@ class RFSNAPIServer:
             Validates and applies deterministic consequences into the reducer.
             """
             try:
-                # Convert request to dict, using model_dump for Pydantic v2 compatibility
+                # Convert request to dict.
+                # Use model_dump() when available (Pydantic v2), and fall back to dict() for
+                # backward compatibility with Pydantic v1 models that do not define model_dump().
                 event_dict = event_req.model_dump() if hasattr(event_req, 'model_dump') else event_req.dict()
                 event = EnvironmentEvent.from_dict(event_dict)
                 
