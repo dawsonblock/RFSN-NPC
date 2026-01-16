@@ -320,12 +320,13 @@ class RFSNHybridEngine:
             "distance",
             "sentiment",
         ):
-            if k in payload:
-                v = str(payload.get(k))
-                v = v.replace("\r", " ").replace("\n", " ").strip()
-                if len(v) > 200:
-                    v = v[:200] + "…"
-                key_fields.append(f"{k}={v}")
+            val = payload.get(k)
+            if val is None or val == "":
+                continue
+            v = str(val).replace("\r", " ").replace("\n", " ").strip()
+            if len(v) > 200:
+                v = v[:200] + "…"
+            key_fields.append(f"{k}={v}")
 
         env_text = f"[ENV] {event_type_key}"
         if key_fields:
