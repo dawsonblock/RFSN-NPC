@@ -334,7 +334,8 @@ class RFSNHybridEngine:
         recent_env = self._recent_env_event_types(store, limit=2)
         ctx_key = build_decision_context_key(
             snapshot.affinity,
-            snapshot.mood,
+            with self._lock:
+                self._last_action[npc_id] = (ctx_key, chosen_action.value)
             recent_player_events=[event_obj.type],
             recent_env_events=recent_env,
         )
