@@ -50,3 +50,4 @@ htmlcov/
 .rfsn_api/
 npc_configs/
 *.gguf
+state/learning/*.json

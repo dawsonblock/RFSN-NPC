@@ -93,10 +93,15 @@ class EnvironmentEvent:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "EnvironmentEvent":
         """Create from dictionary (e.g., from JSON)."""
+        # Handle None for ts explicitly
+        ts = data.get("ts")
+        if ts is None:
+            ts = datetime.now().timestamp()
+        
         return cls(
             event_type=data["event_type"],
             npc_id=data["npc_id"],
-            ts=data.get("ts", datetime.now().timestamp()),
+            ts=ts,
             player_id=data.get("player_id"),
             session_id=data.get("session_id"),
             payload=data.get("payload", {}),
