@@ -216,7 +216,9 @@ class RFSNHybridEngine:
             "location_changed": GameEventType.LOCATION_CHANGED,
         }
 
-        game_type = mapping.get(event.event_type, GameEventType.TIME_PASSED)
+        game_type = mapping.get(event.event_type)
+        if game_type is None:
+            return {"ok": False, "error": f"Unsupported event_type: {event.event_type}"}
         magnitude = 0.5
         if isinstance(event.payload, dict):
             magnitude = float(event.payload.get("magnitude", magnitude))
